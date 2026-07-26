@@ -1,0 +1,6 @@
+# Crypto Paper Trader — dependencies
+# We deliberately use only the Python standard library (urllib, json, etc.)
+# so there are no external dependencies to install. This file exists so that
+# `pip install -r requirements.txt` works in CI without errors.
+#
+# If you add real dependencies later, list them here.

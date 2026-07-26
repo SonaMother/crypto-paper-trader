@@ -1,0 +1,54 @@
+[
+  {
+    "id": "19982d94-3663-4e5d-bf88-ad079981e54a",
+    "ts": "2026-07-26T16:46:15Z",
+    "epoch": 1785084375,
+    "action": "BUY",
+    "token_id": "tendies",
+    "ticker": "TENDIES",
+    "chain": "Robinhood",
+    "amount": 64.08781568856911,
+    "price_usd": 0.01560359,
+    "value_usd": 1.0,
+    "note": "Initial paper buy: $1.00 of TENDIES"
+  },
+  {
+    "id": "03ab6d11-cc83-4487-9158-8c589b24529f",
+    "ts": "2026-07-26T16:46:15Z",
+    "epoch": 1785084375,
+    "action": "BUY",
+    "token_id": "cashcat",
+    "ticker": "CASHCAT",
+    "chain": "Robinhood",
+    "amount": 19.714144898965007,
+    "price_usd": 0.050725,
+    "value_usd": 1.0,
+    "note": "Initial paper buy: $1.00 of CASHCAT"
+  },
+  {
+    "id": "bbd41a0e-e684-4a35-9594-2f92660214df",
+    "ts": "2026-07-26T16:46:15Z",
+    "epoch": 1785084375,
+    "action": "BUY",
+    "token_id": "fox",
+    "ticker": "FOX",
+    "chain": "Robinhood",
+    "amount": 966.8281269638695,
+    "price_usd": 0.00103431,
+    "value_usd": 1.0,
+    "note": "Initial paper buy: $1.00 of FOX"
+  },
+  {
+    "id": "0a380869-d43d-488a-90e1-60cf968e7e2b",
+    "ts": "2026-07-26T16:46:15Z",
+    "epoch": 1785084375,
+    "action": "BUY",
+    "token_id": "pump",
+    "ticker": "PUMP",
+    "chain": "Solana",
+    "amount": 533.0774561543792,
+    "price_usd": 0.0018759,
+    "value_usd": 1.0,
+    "note": "Initial paper buy: $1.00 of PUMP"
+  }
+]
