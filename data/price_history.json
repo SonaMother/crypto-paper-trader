@@ -41,5 +41,16 @@
       "pump": 0.0018592
     },
     "portfolio_value_usd": 3.951642
+  },
+  {
+    "ts": "2026-07-26T16:55:34Z",
+    "epoch": 1785084934,
+    "prices": {
+      "tendies": 0.01558901,
+      "cashcat": 0.04936785,
+      "fox": 0.00102214,
+      "pump": 0.0018592
+    },
+    "portfolio_value_usd": 3.951642
   }
 ]
