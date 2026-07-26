@@ -1,23 +1,19 @@
 """
 Token configuration for the paper trading portfolio.
 
-To add a new token to track:
-  1. Find its CoinGecko coin ID (visit coingecko.com, search the token,
-     copy the ID from the URL: e.g. /coins/tendies-2 -> ID is "tendies-2")
-  2. Add an entry below with all required fields.
+Each token includes a `recommended_by` field tagging which AI recommended it.
+We use this to compute per-AI leaderboard stats in addition to per-token P&L.
 
-Each token definition includes:
-  - id:        internal stable id (used as key in JSON files)
-  - ticker:    display ticker
-  - name:      full name
-  - chain:     blockchain it lives on
-  - coingecko_id:  CoinGecko API coin ID (primary price source)
-  - contract:  contract/mint address (for verification / fallback)
-  - color:     hex color used in the dashboard chart for this token
-  - note:      short note about why we picked it
+To add a new token:
+  1. Find its CoinGecko coin ID (visit coingecko.com, search the token,
+     copy the ID from the URL: e.g. /coins/lista -> ID is "lista")
+  2. Add an entry below.
 """
 
 TOKENS = [
+    # ---------------------------------------------------------------------------
+    # zAI's picks (4 tokens)
+    # ---------------------------------------------------------------------------
     {
         "id": "tendies",
         "ticker": "TENDIES",
@@ -26,7 +22,8 @@ TOKENS = [
         "coingecko_id": "tendies-2",
         "contract": None,  # verify on GeckoTerminal Robinhood chain
         "color": "#f59e0b",
-        "note": "Pick #1 - Robinhood Chain #2 memecoin, gaining while category bleeds",
+        "recommended_by": "zAI",
+        "note": "zAI Pick #1 - Robinhood Chain #2 memecoin, gaining while category bleeds",
     },
     {
         "id": "cashcat",
@@ -36,7 +33,8 @@ TOKENS = [
         "coingecko_id": "cash-cat",
         "contract": "0x020bfC650A365f8BB26819deAAbF3E21291018b4",
         "color": "#3b82f6",
-        "note": "Pick #2 - Robinhood Chain flagship meme, down 70% from ATH, accumulating zone",
+        "recommended_by": "zAI",
+        "note": "zAI Pick #2 - Robinhood Chain flagship meme, down 70% from ATH, accumulating zone",
     },
     {
         "id": "fox",
@@ -46,7 +44,8 @@ TOKENS = [
         "coingecko_id": "robin-hood-2",
         "contract": "0x2103faA9D1762e27a716C61718b3aCf3Ec1F9bf1",
         "color": "#10b981",
-        "note": "Pick #3 - Micro-cap moonshot on Robinhood Chain, themed after the chain itself",
+        "recommended_by": "zAI",
+        "note": "zAI Pick #3 - Micro-cap moonshot on Robinhood Chain, themed after the chain itself",
     },
     {
         "id": "pump",
@@ -56,7 +55,34 @@ TOKENS = [
         "coingecko_id": "pump-fun",
         "contract": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
         "color": "#8b5cf6",
-        "note": "Pick #4 - Safer play, real revenue, listed on Binance US",
+        "recommended_by": "zAI",
+        "note": "zAI Pick #4 - Safer play, real revenue, listed on Binance US",
+    },
+
+    # ---------------------------------------------------------------------------
+    # gAi's picks (2 tokens - both on BNB/BSC chain)
+    # ---------------------------------------------------------------------------
+    {
+        "id": "lista",
+        "ticker": "LISTA",
+        "name": "Lista DAO",
+        "chain": "BSC",
+        "coingecko_id": "lista",
+        "contract": None,  # BSC contract: 0x0615dbaca2c3ee9a341ee946b3625c688b15a9f9
+        "color": "#ec4899",
+        "recommended_by": "gAi",
+        "note": "gAi Pick #1 - Best high-upside valuation mismatch on BNB chain (per gAi)",
+    },
+    {
+        "id": "xvs",
+        "ticker": "XVS",
+        "name": "Venus",
+        "chain": "BSC",
+        "coingecko_id": "venus",
+        "contract": None,  # BSC contract: 0xcf6bb5389c92bdda8a3747ddb454cb7a6d2626c3
+        "color": "#06b6d4",
+        "recommended_by": "gAi",
+        "note": "gAi Pick #2 - Established lending protocol at a small valuation (per gAi)",
     },
 ]
 
@@ -65,3 +91,17 @@ INITIAL_BUY_USD = 1.00
 
 # Cash buffer in paper portfolio (USD) - for tracking uninvested capital
 INITIAL_CASH_USD = 0.00
+
+# Per-AI styling (used by dashboard)
+AI_STYLES = {
+    "zAI": {
+        "color": "#8b5cf6",        # purple
+        "label": "zAI",
+        "description": "Memecoin-focused: Robinhood Chain narrative + Solana pump.fun",
+    },
+    "gAi": {
+        "color": "#06b6d4",        # cyan
+        "label": "gAi",
+        "description": "DeFi-focused: BNB chain lending protocols with real revenue",
+    },
+}

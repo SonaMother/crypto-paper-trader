@@ -1,4 +1,19 @@
-/* Crypto Paper Trader — dashboard logic */
+/* ==========================================================================
+   Crypto Paper Trader — dashboard logic with LIVE price fetching
+
+   Strategy:
+   - Fetch portfolio.json + trades.json + price_history.json from /data/ for
+     trade history, cost basis, and historical chart data (these don't change
+     often and come from the server-side Python scripts).
+   - ALSO fetch live prices directly from CoinGecko's public API every 60
+     seconds. This means the dashboard always shows fresh prices even if the
+     server-side cron hasn't run for hours.
+   - The "live" prices override the last_price in portfolio.json when computing
+     current value and P&L.
+
+   CoinGecko's public API is CORS-enabled (access-control-allow-origin: *),
+   so we can call it directly from the browser. No API key needed.
+   ========================================================================== */
 
 const DATA_BASE = "./data";
 const FILES = {
@@ -7,15 +22,27 @@ const FILES = {
   priceHistory:  `${DATA_BASE}/price_history.json`,
 };
 
-const REFRESH_INTERVAL_SECONDS = 300; // 5 minutes
+const COINGECKO_MARKETS = "https://api.coingecko.com/api/v3/coins/markets";
+
+const REFRESH_INTERVAL_SECONDS = 60; // live price refresh interval
 let countdownSeconds = REFRESH_INTERVAL_SECONDS;
 let countdownTimer = null;
 
 let portfolioChart = null;
 
-// ----------------------------------------------------------------------------
+// Cached state from server
+let cachedPortfolio = null;
+let cachedTrades = [];
+let cachedPriceHistory = [];
+
+// Latest live prices (from CoinGecko, fetched every 60s)
+let livePrices = {};  // { token_id: { price, change_24h, market_cap, volume_24h } }
+let livePriceSource = "—";
+let livePriceSourceTime = null;
+
+// ============================================================================
 // Utilities
-// ----------------------------------------------------------------------------
+// ============================================================================
 
 function fmtUsd(x, decimals = 2) {
   if (x === null || x === undefined || isNaN(x)) return "—";
@@ -59,6 +86,7 @@ function fmtRelative(iso) {
   const now = new Date();
   const then = new Date(iso);
   const diffSec = Math.round((now - then) / 1000);
+  if (diffSec < 0) return "just now";
   if (diffSec < 60) return `${diffSec}s ago`;
   if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
   if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
@@ -66,9 +94,9 @@ function fmtRelative(iso) {
 }
 
 function pnlClass(pnl) {
-  if (pnl > 0.0001) return "text-emerald-400";
-  if (pnl < -0.0001) return "text-red-400";
-  return "text-slate-400";
+  if (pnl > 0.0001) return "text-up";
+  if (pnl < -0.0001) return "text-down";
+  return "text-muted";
 }
 
 function pnlBgClass(pnl) {
@@ -77,105 +105,319 @@ function pnlBgClass(pnl) {
   return "pill-neutral";
 }
 
-// ----------------------------------------------------------------------------
-// Fetch helpers (with cache-busting so we always see fresh data)
-// ----------------------------------------------------------------------------
+function aiPillClass(ai) {
+  return ai === "zAI" ? "pill-zai" : (ai === "gAi" ? "pill-gai" : "pill-neutral");
+}
 
-async function fetchJson(url) {
-  const cacheBust = `${url}?t=${Date.now()}`;
-  const resp = await fetch(cacheBust, { cache: "no-store" });
+// ============================================================================
+// Fetch helpers
+// ============================================================================
+
+async function fetchJson(url, options = {}) {
+  const cacheBust = `${url}${url.includes("?") ? "&" : "?"}t=${Date.now()}`;
+  const resp = await fetch(cacheBust, { cache: "no-store", ...options });
   if (!resp.ok) throw new Error(`Failed to fetch ${url}: ${resp.status}`);
   return resp.json();
 }
 
-// ----------------------------------------------------------------------------
+async function fetchLivePrices() {
+  // Build a comma-separated list of CoinGecko coin IDs
+  const tokens = window.TOKEN_CONFIG.tokens;
+  const cgIdMap = window.TOKEN_CONFIG.coingeckoIds;
+  const cgIds = tokens.map(t => cgIdMap[t.id]).filter(Boolean);
+  if (cgIds.length === 0) return {};
+
+  const url = `${COINGECKO_MARKETS}?vs_currency=usd&ids=${cgIds.join(",")}&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h`;
+
+  try {
+    const items = await fetchJson(url);
+    // CoinGecko returns an error object instead of an array when rate-limited
+    if (!Array.isArray(items)) {
+      const errMsg = items?.status?.error_message || "unknown error";
+      console.warn("[live] CoinGecko API error:", errMsg);
+      livePriceSource = "Cached (CoinGecko rate-limited)";
+      return {};
+    }
+    const out = {};
+    for (const item of items) {
+      const cgId = item.id;
+      // Find which token this CoinGecko ID corresponds to
+      const token = tokens.find(t => cgIdMap[t.id] === cgId);
+      if (!token) continue;
+      out[token.id] = {
+        price: item.current_price,
+        change_24h: item.price_change_percentage_24h || 0,
+        market_cap: item.market_cap || 0,
+        volume_24h: item.total_volume || 0,
+      };
+    }
+    if (Object.keys(out).length > 0) {
+      livePriceSource = "CoinGecko (live)";
+      livePriceSourceTime = new Date().toISOString();
+    } else {
+      livePriceSource = "Cached (no live data)";
+    }
+    return out;
+  } catch (err) {
+    console.warn("[live] CoinGecko fetch failed:", err.message);
+    livePriceSource = `Cached (${err.message})`;
+    return {};
+  }
+}
+
+// ============================================================================
+// Computation
+// ============================================================================
+
+function computeSummary(portfolio, livePrices) {
+  if (!portfolio || !portfolio.holdings) {
+    return { total_cost_usd: 0, total_value_usd: 0, total_pnl_usd: 0, total_pnl_pct: 0, holdings: [], per_ai: [] };
+  }
+
+  const holdings = [];
+  let totalCost = 0;
+  let totalValue = portfolio.cash_usd || 0;
+
+  for (const token of window.TOKEN_CONFIG.tokens) {
+    const tid = token.id;
+    const h = portfolio.holdings[tid];
+    const livePrice = livePrices[tid];
+    const recommendedBy = token.recommended_by;
+
+    if (!h) {
+      holdings.push({
+        token_id: tid,
+        ticker: token.ticker,
+        chain: token.chain,
+        color: token.color,
+        recommended_by: recommendedBy,
+        amount: 0,
+        cost_basis_usd: 0,
+        last_price: null,
+        current_value_usd: 0,
+        pnl_usd: 0,
+        pnl_pct: 0,
+        change_24h: null,
+        source: "—",
+      });
+      continue;
+    }
+
+    // Prefer live price; fall back to last known price in portfolio.json
+    const price = (livePrice && livePrice.price) ? livePrice.price : (h.last_price || 0);
+    const change24h = (livePrice && livePrice.change_24h !== undefined) ? livePrice.change_24h : null;
+    const source = livePrice ? "CoinGecko (live)" : "cached";
+
+    const cost = h.cost_basis_usd || 0;
+    const value = (h.amount || 0) * price;
+    const pnl = value - cost;
+    const pnlPct = cost > 0 ? (pnl / cost) * 100 : 0;
+
+    totalCost += cost;
+    totalValue += value;
+
+    holdings.push({
+      token_id: tid,
+      ticker: h.ticker || token.ticker,
+      chain: h.chain || token.chain,
+      color: h.color || token.color,
+      recommended_by: recommendedBy,
+      amount: h.amount || 0,
+      cost_basis_usd: cost,
+      last_price: price,
+      current_value_usd: value,
+      pnl_usd: pnl,
+      pnl_pct: pnlPct,
+      change_24h: change24h,
+      source: source,
+    });
+  }
+
+  // Per-AI grouping
+  const perAi = {};
+  for (const h of holdings) {
+    const ai = h.recommended_by;
+    if (!perAi[ai]) {
+      perAi[ai] = {
+        ai,
+        num_tokens: 0,
+        cost_basis_usd: 0,
+        current_value_usd: 0,
+        pnl_usd: 0,
+        pnl_pct: 0,
+        tokens: [],
+      };
+    }
+    perAi[ai].num_tokens += 1;
+    perAi[ai].cost_basis_usd += h.cost_basis_usd;
+    perAi[ai].current_value_usd += h.current_value_usd;
+    perAi[ai].tokens.push({ ticker: h.ticker, pnl_pct: h.pnl_pct, color: h.color });
+  }
+  const perAiArr = Object.values(perAi).map(s => ({
+    ...s,
+    pnl_usd: s.current_value_usd - s.cost_basis_usd,
+    pnl_pct: s.cost_basis_usd > 0 ? ((s.current_value_usd - s.cost_basis_usd) / s.cost_basis_usd) * 100 : 0,
+  }));
+
+  return {
+    created_at: portfolio.created_at,
+    last_updated_at: portfolio.last_updated_at,
+    cash_usd: portfolio.cash_usd || 0,
+    total_cost_usd: totalCost,
+    total_value_usd: totalValue,
+    total_pnl_usd: totalValue - totalCost,
+    total_pnl_pct: totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0,
+    holdings,
+    per_ai: perAiArr,
+  };
+}
+
+// ============================================================================
 // Renderers
-// ----------------------------------------------------------------------------
+// ============================================================================
 
 function renderHero(portfolio, summary) {
   document.getElementById("hero-value").textContent = fmtUsd(summary.total_value_usd);
   document.getElementById("hero-cost").textContent = fmtUsd(summary.total_cost_usd);
   document.getElementById("hero-cash").textContent = fmtUsd(summary.cash_usd);
-  document.getElementById("hero-updated").textContent = fmtRelative(portfolio.last_updated_at);
-  document.getElementById("footer-update").textContent = `Updated ${fmtRelative(portfolio.last_updated_at)}`;
+  document.getElementById("hero-updated").textContent = livePriceSourceTime ? fmtRelative(livePriceSourceTime) : fmtRelative(portfolio.last_updated_at);
+  document.getElementById("hero-source").textContent = livePriceSource;
+  document.getElementById("footer-update").textContent = `Live prices: ${livePriceSource}`;
 
   const pnlEl = document.getElementById("hero-pnl");
   const pnl = summary.total_pnl_usd;
   const pnlPct = summary.total_pnl_pct;
   pnlEl.textContent = `${fmtUsd(pnl)} (${fmtPct(pnlPct)})`;
-  pnlEl.className = `text-lg font-semibold tabular-nums ${pnlClass(pnl)}`;
+  pnlEl.className = `hero-pnl ${pnlClass(pnl)}`;
 }
 
-function renderPerformance(summary) {
-  const holdings = summary.holdings.filter(h => h.cost_basis_usd > 0);
-  if (holdings.length === 0) {
-    document.getElementById("best-perf").textContent = "—";
-    document.getElementById("worst-perf").textContent = "—";
-    document.getElementById("win-lose").textContent = "—";
-    document.getElementById("num-positions").textContent = "0";
+function renderAiLeaderboard(summary) {
+  const container = document.getElementById("ai-leaderboard");
+  if (!summary.per_ai || summary.per_ai.length === 0) {
+    container.innerHTML = `<div class="ai-leaderboard-row">No data yet.</div>`;
     return;
   }
-  const sorted = [...holdings].sort((a, b) => b.pnl_pct - a.pnl_pct);
-  const best = sorted[0];
-  const worst = sorted[sorted.length - 1];
-  document.getElementById("best-perf").innerHTML = `<span class="${pnlClass(best.pnl_pct)}">${best.ticker} ${fmtPct(best.pnl_pct)}</span>`;
-  document.getElementById("worst-perf").innerHTML = `<span class="${pnlClass(worst.pnl_pct)}">${worst.ticker} ${fmtPct(worst.pnl_pct)}</span>`;
-  const winners = holdings.filter(h => h.pnl_usd > 0).length;
-  const losers = holdings.filter(h => h.pnl_usd < 0).length;
-  document.getElementById("win-lose").innerHTML = `<span class="text-emerald-400">${winners}</span> / <span class="text-red-400">${losers}</span>`;
-  document.getElementById("num-positions").textContent = holdings.length;
+
+  // Sort by P&L% descending
+  const sorted = [...summary.per_ai].sort((a, b) => b.pnl_pct - a.pnl_pct);
+  const styles = window.TOKEN_CONFIG.aiStyles;
+
+  container.innerHTML = sorted.map((ai, idx) => {
+    const style = styles[ai.ai] || { color: "#64748b", label: ai.ai, description: "" };
+    const medal = idx === 0 ? "🥇" : (idx === 1 ? "🥈" : "🥉");
+    return `
+      <div class="ai-leaderboard-row">
+        <div class="ai-leaderboard-rank">${medal}</div>
+        <div class="ai-leaderboard-info">
+          <span class="dot" style="background: ${style.color};"></span>
+          <div>
+            <div class="ai-leaderboard-name">${style.label}</div>
+            <div class="ai-leaderboard-meta">${ai.num_tokens} tokens · ${style.description || ""}</div>
+          </div>
+        </div>
+        <div class="ai-leaderboard-stats">
+          <div class="ai-leaderboard-pnl ${pnlClass(ai.pnl_usd)}">${fmtUsd(ai.pnl_usd)}</div>
+          <div class="ai-leaderboard-pct ${pnlClass(ai.pnl_pct)}">${fmtPct(ai.pnl_pct)}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderAiBreakdown(summary) {
+  const container = document.getElementById("ai-breakdown");
+  if (!summary.per_ai || summary.per_ai.length === 0) {
+    container.innerHTML = `<div class="loading">No data yet.</div>`;
+    return;
+  }
+  const styles = window.TOKEN_CONFIG.aiStyles;
+
+  container.innerHTML = summary.per_ai.map(ai => {
+    const style = styles[ai.ai] || { color: "#64748b", label: ai.ai };
+    const tokenChips = ai.tokens.map(t =>
+      `<span class="ai-token-chip" style="border-left: 2px solid ${t.color};">
+         ${t.ticker} <span class="${pnlClass(t.pnl_pct)}">${fmtPct(t.pnl_pct)}</span>
+       </span>`
+    ).join("");
+    return `
+      <div class="ai-breakdown-card" data-ai="${ai.ai}">
+        <div class="ai-breakdown-header">
+          <div class="ai-breakdown-title" style="color: ${style.color};">${style.label}</div>
+          <span class="pill ${aiPillClass(ai.ai)}">${ai.num_tokens} tokens</span>
+        </div>
+        <div class="ai-breakdown-pnl ${pnlClass(ai.pnl_usd)}">${fmtUsd(ai.pnl_usd)} <span style="font-size: 13px; font-weight: 500;">(${fmtPct(ai.pnl_pct)})</span></div>
+        <div class="ai-breakdown-stats">
+          <div>
+            <div class="ai-breakdown-stat-label">Cost</div>
+            <div class="ai-breakdown-stat-value">${fmtUsd(ai.cost_basis_usd)}</div>
+          </div>
+          <div>
+            <div class="ai-breakdown-stat-label">Value</div>
+            <div class="ai-breakdown-stat-value">${fmtUsd(ai.current_value_usd)}</div>
+          </div>
+          <div>
+            <div class="ai-breakdown-stat-label">P&amp;L</div>
+            <div class="ai-breakdown-stat-value ${pnlClass(ai.pnl_usd)}">${fmtUsd(ai.pnl_usd)}</div>
+          </div>
+        </div>
+        <div class="ai-breakdown-tokens">${tokenChips}</div>
+      </div>
+    `;
+  }).join("");
 }
 
 function renderHoldings(summary) {
   const grid = document.getElementById("holdings-grid");
   if (!summary.holdings || summary.holdings.length === 0) {
-    grid.innerHTML = `<div class="col-span-full rounded-2xl bg-slate-900/60 border border-slate-800 p-6 text-slate-500 text-sm">No holdings yet.</div>`;
+    grid.innerHTML = `<div class="card card-sm">No holdings yet.</div>`;
     return;
   }
   grid.innerHTML = summary.holdings.map(h => {
     const pnlCls = pnlClass(h.pnl_usd);
     const pnlPill = pnlBgClass(h.pnl_usd);
+    const aiPill = aiPillClass(h.recommended_by);
     const priceStr = h.last_price ? fmtPrice(h.last_price) : "—";
     const valueStr = fmtUsd(h.current_value_usd);
     const changeStr = (h.last_price && h.change_24h !== null && h.change_24h !== undefined) ? `${fmtPct(h.change_24h)} (24h)` : "";
+    const sourceStr = h.source === "CoinGecko (live)" ? '<span class="dot dot-pulse" style="background: #10b981;"></span>' : "";
 
     return `
-      <div class="holding-card rounded-2xl bg-slate-900/60 border border-slate-800 p-5 relative overflow-hidden">
-        <div class="absolute top-0 left-0 right-0 h-1" style="background: ${h.color}; opacity: 0.7;"></div>
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold" style="background: ${h.color}22; color: ${h.color};">
+      <div class="holding-card">
+        <div class="holding-stripe" style="background: ${h.color};"></div>
+        <div class="holding-header">
+          <div class="holding-id">
+            <div class="holding-logo" style="background: ${h.color}22; color: ${h.color};">
               ${h.ticker.slice(0, 2)}
             </div>
             <div>
-              <div class="text-sm font-semibold text-slate-100">${h.ticker}</div>
-              <div class="text-[10px] text-slate-500 uppercase tracking-wider">${h.chain}</div>
+              <div class="holding-ticker">${h.ticker}</div>
+              <div class="holding-chain">${h.chain}</div>
             </div>
           </div>
-          <span class="text-[10px] px-2 py-0.5 rounded-full ${pnlPill}">${fmtPct(h.pnl_pct)}</span>
+          <span class="pill ${aiPill}">${h.recommended_by}</span>
         </div>
-        <div class="space-y-2 text-sm">
-          <div class="flex justify-between">
-            <span class="text-slate-500">Price</span>
-            <span class="text-slate-200 tabular-nums">${priceStr}</span>
+        <div class="holding-stats">
+          <div class="holding-row">
+            <span class="holding-label">Price</span>
+            <span class="holding-value">${priceStr} ${sourceStr}</span>
           </div>
-          <div class="flex justify-between">
-            <span class="text-slate-500">Holdings</span>
-            <span class="text-slate-200 tabular-nums">${fmtAmount(h.amount)}</span>
+          <div class="holding-row">
+            <span class="holding-label">Holdings</span>
+            <span class="holding-value">${fmtAmount(h.amount)}</span>
           </div>
-          <div class="flex justify-between">
-            <span class="text-slate-500">Value</span>
-            <span class="text-slate-200 tabular-nums">${valueStr}</span>
+          <div class="holding-row">
+            <span class="holding-label">Value</span>
+            <span class="holding-value">${valueStr}</span>
           </div>
-          <div class="flex justify-between">
-            <span class="text-slate-500">Cost</span>
-            <span class="text-slate-200 tabular-nums">${fmtUsd(h.cost_basis_usd)}</span>
+          <div class="holding-row">
+            <span class="holding-label">Cost</span>
+            <span class="holding-value">${fmtUsd(h.cost_basis_usd)}</span>
           </div>
-          <div class="flex justify-between pt-2 mt-2 border-t border-slate-800/70">
-            <span class="text-slate-500">P&amp;L</span>
-            <span class="${pnlCls} font-semibold tabular-nums">${fmtUsd(h.pnl_usd)}</span>
+          <div class="holding-row holding-pnl-row">
+            <span class="holding-label">P&amp;L</span>
+            <span class="holding-pnl ${pnlCls}">${fmtUsd(h.pnl_usd)} (${fmtPct(h.pnl_pct)})</span>
           </div>
-          ${changeStr ? `<div class="text-[10px] text-slate-500 pt-1">${changeStr}</div>` : ""}
+          ${changeStr ? `<div class="holding-24h">24h: <span class="${pnlClass(h.change_24h)}">${changeStr}</span></div>` : ""}
         </div>
       </div>
     `;
@@ -187,22 +429,25 @@ function renderTrades(trades) {
   const count = trades.length;
   document.getElementById("trade-count").textContent = `${count} trade${count === 1 ? "" : "s"}`;
   if (count === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-500">No trades yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="table-empty">No trades yet.</td></tr>`;
     return;
   }
   // Most recent first
-  const sorted = [...trades].sort((a, b) => b.epoch - a.epoch);
+  const sorted = [...trades].sort((a, b) => (b.epoch || 0) - (a.epoch || 0));
   tbody.innerHTML = sorted.map(t => {
-    const actionClass = t.action === "BUY" ? "text-emerald-400" : "text-red-400";
+    const actionClass = t.action === "BUY" ? "text-up" : "text-down";
+    const aiPill = aiPillClass(t.recommended_by);
+    const aiTag = t.recommended_by ? `<span class="pill ${aiPill}" style="font-size: 9px; padding: 2px 6px;">${t.recommended_by}</span>` : "";
     return `
-      <tr class="hover:bg-slate-800/30">
-        <td class="py-3 text-slate-400 text-xs whitespace-nowrap">${fmtTime(t.ts)}</td>
-        <td class="py-3"><span class="text-xs font-semibold ${actionClass}">${t.action}</span></td>
-        <td class="py-3 text-slate-200 font-medium">${t.ticker}</td>
-        <td class="py-3 text-right text-slate-300 tabular-nums">${fmtAmount(t.amount)}</td>
-        <td class="py-3 text-right text-slate-300 tabular-nums">${fmtPrice(t.price_usd)}</td>
-        <td class="py-3 text-right text-slate-200 tabular-nums font-medium">${fmtUsd(t.value_usd)}</td>
-        <td class="py-3 text-slate-500 text-xs">${t.note || ""}</td>
+      <tr>
+        <td style="color: var(--text-muted); font-size: 11px; white-space: nowrap;">${fmtTime(t.ts)}</td>
+        <td><span style="font-size: 11px; font-weight: 600;" class="${actionClass}">${t.action}</span></td>
+        <td>${aiTag}</td>
+        <td style="font-weight: 500;">${t.ticker}</td>
+        <td class="text-right" style="font-variant-numeric: tabular-nums;">${fmtAmount(t.amount)}</td>
+        <td class="text-right" style="font-variant-numeric: tabular-nums;">${fmtPrice(t.price_usd)}</td>
+        <td class="text-right" style="font-weight: 500; font-variant-numeric: tabular-nums;">${fmtUsd(t.value_usd)}</td>
+        <td style="color: var(--text-muted); font-size: 11px;">${t.note || ""}</td>
       </tr>
     `;
   }).join("");
@@ -222,45 +467,54 @@ function renderChart(priceHistory) {
     return d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
   });
   const values = priceHistory.map(p => p.portfolio_value_usd);
-  const costBasis = values.length > 0 ? 4.0 : null; // we deployed $4 total
+  const costBasis = values.length > 0 ? 6.0 : null; // we deployed $6 total ($4 zAI + $2 gAi)
 
-  const data = {
-    labels,
-    datasets: [
-      {
-        label: "Portfolio Value (USD)",
-        data: values,
-        borderColor: "#8b5cf6",
-        backgroundColor: (ctx) => {
-          const chart = ctx.chart;
-          const { ctx: canvasCtx, chartArea } = chart;
-          if (!chartArea) return "rgba(139, 92, 246, 0.1)";
-          const gradient = canvasCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-          gradient.addColorStop(0, "rgba(139, 92, 246, 0.35)");
-          gradient.addColorStop(1, "rgba(139, 92, 246, 0.0)");
-          return gradient;
-        },
-        borderWidth: 2,
-        fill: true,
-        tension: 0.25,
-        pointRadius: 0,
-        pointHoverRadius: 5,
-        pointHoverBackgroundColor: "#8b5cf6",
-        pointHoverBorderColor: "#ffffff",
-        pointHoverBorderWidth: 2,
+  const datasets = [
+    {
+      label: "Portfolio Value (USD)",
+      data: values,
+      borderColor: "#8b5cf6",
+      backgroundColor: (ctx) => {
+        const chart = ctx.chart;
+        const { ctx: canvasCtx, chartArea } = chart;
+        if (!chartArea) return "rgba(139, 92, 246, 0.1)";
+        const gradient = canvasCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+        gradient.addColorStop(0, "rgba(139, 92, 246, 0.35)");
+        gradient.addColorStop(1, "rgba(139, 92, 246, 0.0)");
+        return gradient;
       },
-      ...(costBasis !== null ? [{
-        label: "Cost Basis ($4.00)",
-        data: values.map(() => costBasis),
-        borderColor: "#475569",
-        borderDash: [4, 4],
-        borderWidth: 1,
-        fill: false,
-        pointRadius: 0,
-        tension: 0,
-      }] : []),
-    ],
-  };
+      borderWidth: 2,
+      fill: true,
+      tension: 0.25,
+      pointRadius: 0,
+      pointHoverRadius: 5,
+      pointHoverBackgroundColor: "#8b5cf6",
+      pointHoverBorderColor: "#ffffff",
+      pointHoverBorderWidth: 2,
+    },
+  ];
+
+  if (costBasis !== null) {
+    datasets.push({
+      label: "Cost Basis ($6.00)",
+      data: values.map(() => costBasis),
+      borderColor: "#475569",
+      borderDash: [4, 4],
+      borderWidth: 1,
+      fill: false,
+      pointRadius: 0,
+      tension: 0,
+    });
+  }
+
+  // If we have live price, append a "now" point
+  if (cachedPortfolio && Object.keys(livePrices).length > 0) {
+    const summary = computeSummary(cachedPortfolio, livePrices);
+    datasets[0].data.push(summary.total_value_usd);
+    labels.push("now");
+  }
+
+  const data = { labels, datasets };
 
   const options = {
     responsive: true,
@@ -306,84 +560,62 @@ function renderChart(priceHistory) {
   portfolioChart = new Chart(ctx, { type: "line", data, options });
 }
 
-// ----------------------------------------------------------------------------
-// Computation (mirror of Python compute_summary)
-// ----------------------------------------------------------------------------
-
-function computeSummary(portfolio, prices) {
-  const tokens = (portfolio.holdings ? Object.values(portfolio.holdings) : []);
-  let totalCost = 0;
-  let totalValue = portfolio.cash_usd || 0;
-  const holdings = tokens.map(h => {
-    const cost = h.cost_basis_usd || 0;
-    const price = h.last_price || 0;
-    const value = (h.amount || 0) * price;
-    const pnl = value - cost;
-    const pnlPct = cost > 0 ? (pnl / cost) * 100 : 0;
-    const priceInfo = prices ? prices[h.token_id] : null;
-    totalCost += cost;
-    totalValue += value;
-    return {
-      token_id: h.token_id,
-      ticker: h.ticker,
-      chain: h.chain,
-      color: h.color,
-      amount: h.amount,
-      cost_basis_usd: cost,
-      last_price: price,
-      current_value_usd: value,
-      pnl_usd: pnl,
-      pnl_pct: pnlPct,
-      change_24h: priceInfo ? priceInfo.change_24h : null,
-    };
-  });
-  return {
-    created_at: portfolio.created_at,
-    last_updated_at: portfolio.last_updated_at,
-    cash_usd: portfolio.cash_usd || 0,
-    total_cost_usd: totalCost,
-    total_value_usd: totalValue,
-    total_pnl_usd: totalValue - totalCost,
-    total_pnl_pct: totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0,
-    holdings,
-  };
-}
-
-// ----------------------------------------------------------------------------
+// ============================================================================
 // Main refresh
-// ----------------------------------------------------------------------------
+// ============================================================================
 
-async function refresh() {
+async function refreshAll() {
+  const refreshIcon = document.getElementById("refresh-icon");
+  refreshIcon.classList.add("spin");
+
   try {
-    const refreshIcon = document.getElementById("refresh-icon");
-    refreshIcon.classList.add("animate-spin");
-    refreshIcon.style.animationDuration = "0.8s";
-
-    const [portfolio, trades, priceHistory] = await Promise.all([
+    // Fetch server-side data + live prices in parallel
+    const [portfolio, trades, priceHistory, live] = await Promise.all([
       fetchJson(FILES.portfolio),
       fetchJson(FILES.trades),
       fetchJson(FILES.priceHistory),
+      fetchLivePrices(),
     ]);
 
-    const summary = computeSummary(portfolio, null);
+    cachedPortfolio = portfolio;
+    cachedTrades = trades;
+    cachedPriceHistory = priceHistory;
+    livePrices = live;
+
+    const summary = computeSummary(portfolio, live);
     renderHero(portfolio, summary);
-    renderPerformance(summary);
+    renderAiLeaderboard(summary);
+    renderAiBreakdown(summary);
     renderHoldings(summary);
     renderTrades(trades);
     renderChart(priceHistory);
 
-    // Reset countdown
     countdownSeconds = REFRESH_INTERVAL_SECONDS;
   } catch (err) {
     console.error("Refresh failed:", err);
     document.getElementById("hero-value").textContent = "—";
     document.getElementById("hero-pnl").textContent = "(refresh failed)";
   } finally {
-    const refreshIcon = document.getElementById("refresh-icon");
     setTimeout(() => {
-      refreshIcon.classList.remove("animate-spin");
-      refreshIcon.style.animationDuration = "";
-    }, 600);
+      refreshIcon.classList.remove("spin");
+    }, 500);
+  }
+}
+
+// "Live only" refresh — only re-fetch live prices and re-render (faster, less load)
+async function refreshLiveOnly() {
+  if (!cachedPortfolio) return;
+  try {
+    const live = await fetchLivePrices();
+    livePrices = live;
+    const summary = computeSummary(cachedPortfolio, live);
+    renderHero(cachedPortfolio, summary);
+    renderAiLeaderboard(summary);
+    renderAiBreakdown(summary);
+    renderHoldings(summary);
+    renderChart(cachedPriceHistory);
+  } catch (err) {
+    console.warn("[live] refresh failed:", err.message);
   }
 }
 
@@ -392,31 +624,28 @@ function startCountdown() {
   countdownTimer = setInterval(() => {
     countdownSeconds--;
     if (countdownSeconds <= 0) {
-      refresh();
+      refreshLiveOnly();
+      countdownSeconds = REFRESH_INTERVAL_SECONDS;
     } else {
-      const mins = Math.floor(countdownSeconds / 60);
-      const secs = countdownSeconds % 60;
-      document.getElementById("auto-refresh-text").textContent = `Auto-refresh in ${mins}m ${secs.toString().padStart(2, "0")}s`;
+      document.getElementById("auto-refresh-text").textContent = `Live · updating in ${countdownSeconds}s`;
     }
   }, 1000);
 }
 
-// ----------------------------------------------------------------------------
+// ============================================================================
 // Init
-// ----------------------------------------------------------------------------
+// ============================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("refresh-btn").addEventListener("click", refresh);
-  // Set repo link
+  document.getElementById("refresh-btn").addEventListener("click", refreshAll);
   const repoLink = document.getElementById("repo-link");
   if (repoLink) {
-    // The dashboard is hosted on username.github.io/repo-name/, so we can derive the repo URL
     const pathParts = window.location.pathname.split("/").filter(Boolean);
     if (pathParts.length >= 1) {
       const repo = pathParts[0];
       repoLink.href = `https://github.com/SonaMother/${repo}`;
     }
   }
-  refresh();
+  refreshAll();
   startCountdown();
 });

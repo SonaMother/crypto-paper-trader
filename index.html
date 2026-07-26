@@ -3,32 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crypto Paper Trader — Live Portfolio</title>
-  <meta name="description" content="Real-time paper-trading tracker for crypto memecoin picks." />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Crypto Paper Trader — zAI vs gAi Live</title>
+  <meta name="description" content="Live paper-trading tracker: zAI's memecoin picks vs gAi's DeFi picks." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="min-h-screen">
+<body>
 
   <!-- Header -->
-  <header class="border-b border-slate-800 sticky top-0 z-10 backdrop-blur-md bg-slate-950/80">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 via-fuchsia-500 to-purple-600 flex items-center justify-center font-black text-slate-950">
-          ₿
-        </div>
+  <header class="header">
+    <div class="container header-inner">
+      <div class="brand">
+        <div class="brand-logo">₿</div>
         <div>
-          <h1 class="text-lg font-semibold text-slate-100 leading-tight">Crypto Paper Trader</h1>
-          <p class="text-xs text-slate-500 leading-tight">No real money. Just alpha and conviction.</p>
+          <h1 class="brand-title">Crypto Paper Trader</h1>
+          <p class="brand-subtitle">zAI vs gAi — live paper-trading duel</p>
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        <div id="auto-refresh-pill" class="text-xs px-2.5 py-1 rounded-full bg-slate-800/80 text-slate-400 hidden sm:flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="auto-refresh-text">Auto-refresh in 5m</span>
+      <div class="header-actions">
+        <div id="auto-refresh-pill" class="pill pill-live hidden-mobile">
+          <span class="dot dot-pulse"></span>
+          <span id="auto-refresh-text">Live · updating in 60s</span>
         </div>
-        <button id="refresh-btn" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors flex items-center gap-1.5">
+        <button id="refresh-btn" class="btn btn-secondary">
           <svg id="refresh-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
           Refresh
         </button>
@@ -36,116 +36,120 @@
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+  <main class="container main">
 
     <!-- Hero: total portfolio value + P&L -->
-    <section class="mb-10">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <section class="section">
+      <div class="grid grid-2-1">
         <!-- Total value card -->
-        <div class="lg:col-span-2 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-900/40 border border-slate-800 p-6 relative overflow-hidden">
-          <div class="absolute inset-0 opacity-30 pointer-events-none" style="background-image: radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.18), transparent 40%), radial-gradient(circle at 80% 70%, rgba(245, 158, 11, 0.12), transparent 40%);"></div>
-          <div class="relative">
-            <p class="text-xs uppercase tracking-wider text-slate-500 mb-2">Total Portfolio Value (Paper)</p>
-            <div class="flex items-baseline gap-3">
-              <span id="hero-value" class="text-5xl sm:text-6xl font-bold text-slate-50 tabular-nums">$0.00</span>
-              <span id="hero-pnl" class="text-lg font-semibold text-slate-400 tabular-nums">—</span>
+        <div class="card card-hero">
+          <div class="hero-glow"></div>
+          <div class="hero-content">
+            <p class="label">Total Portfolio Value (Paper)</p>
+            <div class="hero-row">
+              <span id="hero-value" class="hero-value">$0.00</span>
+              <span id="hero-pnl" class="hero-pnl text-muted">—</span>
             </div>
-            <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-              <div class="flex items-center gap-2">
-                <span class="text-slate-500">Cost basis</span>
-                <span id="hero-cost" class="font-medium text-slate-300 tabular-nums">$0.00</span>
+            <div class="hero-stats">
+              <div class="hero-stat">
+                <span class="hero-stat-label">Cost basis</span>
+                <span id="hero-cost" class="hero-stat-value">$0.00</span>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="text-slate-500">Cash</span>
-                <span id="hero-cash" class="font-medium text-slate-300 tabular-nums">$0.00</span>
+              <div class="hero-stat">
+                <span class="hero-stat-label">Cash</span>
+                <span id="hero-cash" class="hero-stat-value">$0.00</span>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="text-slate-500">Last update</span>
-                <span id="hero-updated" class="font-medium text-slate-300">—</span>
+              <div class="hero-stat">
+                <span class="hero-stat-label">Last update</span>
+                <span id="hero-updated" class="hero-stat-value">—</span>
+              </div>
+              <div class="hero-stat">
+                <span class="hero-stat-label">Price source</span>
+                <span id="hero-source" class="hero-stat-value">—</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Performance summary card -->
-        <div class="rounded-2xl bg-slate-900/60 border border-slate-800 p-6">
-          <p class="text-xs uppercase tracking-wider text-slate-500 mb-3">Performance</p>
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-400">Best performer</span>
-              <span id="best-perf" class="text-sm font-semibold text-slate-100">—</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-400">Worst performer</span>
-              <span id="worst-perf" class="text-sm font-semibold text-slate-100">—</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-400">Winners / Losers</span>
-              <span id="win-lose" class="text-sm font-semibold text-slate-100">—</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-400">Open positions</span>
-              <span id="num-positions" class="text-sm font-semibold text-slate-100">—</span>
-            </div>
+        <!-- AI Leaderboard card -->
+        <div class="card">
+          <p class="label">AI Leaderboard</p>
+          <div id="ai-leaderboard" class="ai-leaderboard">
+            <div class="ai-leaderboard-row">Loading…</div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Portfolio value over time chart -->
-    <section class="mb-10">
-      <div class="rounded-2xl bg-slate-900/60 border border-slate-800 p-6">
-        <div class="flex items-center justify-between mb-4">
+    <section class="section">
+      <div class="card">
+        <div class="card-header">
           <div>
-            <h2 class="text-base font-semibold text-slate-100">Portfolio Value Over Time</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Tracked from the first buy. Updates hourly via GitHub Actions.</p>
+            <h2 class="card-title">Portfolio Value Over Time</h2>
+            <p class="card-subtitle">Tracked from the first buy. The dashed line is the total cost basis ($6.00).</p>
           </div>
         </div>
-        <div class="h-72">
+        <div class="chart-container">
           <canvas id="portfolio-chart"></canvas>
         </div>
       </div>
     </section>
 
-    <!-- Token holdings cards -->
-    <section class="mb-10">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h2 class="text-base font-semibold text-slate-100">Holdings</h2>
-          <p class="text-xs text-slate-500 mt-0.5">4 paper positions, $1 USD cost basis each.</p>
+    <!-- Per-AI breakdown -->
+    <section class="section">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Per-AI Breakdown</h2>
+            <p class="card-subtitle">How each AI's basket of picks is performing, head-to-head.</p>
+          </div>
+        </div>
+        <div id="ai-breakdown" class="ai-breakdown">
+          <div class="loading">Loading…</div>
         </div>
       </div>
-      <div id="holdings-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Populated by JS -->
-        <div class="rounded-2xl bg-slate-900/60 border border-slate-800 p-6 text-slate-500 text-sm">Loading holdings…</div>
+    </section>
+
+    <!-- Token holdings cards -->
+    <section class="section">
+      <div class="card-header section-header">
+        <div>
+          <h2 class="card-title">Holdings</h2>
+          <p class="card-subtitle">6 paper positions, $1 USD cost basis each. Prices are live from CoinGecko.</p>
+        </div>
+      </div>
+      <div id="holdings-grid" class="holdings-grid">
+        <div class="card card-sm">Loading holdings…</div>
       </div>
     </section>
 
     <!-- Trade history -->
-    <section class="mb-10">
-      <div class="rounded-2xl bg-slate-900/60 border border-slate-800 p-6">
-        <div class="flex items-center justify-between mb-4">
+    <section class="section">
+      <div class="card">
+        <div class="card-header">
           <div>
-            <h2 class="text-base font-semibold text-slate-100">Trade History</h2>
-            <p class="text-xs text-slate-500 mt-0.5">All paper trades — buys, sells, and adjustments.</p>
+            <h2 class="card-title">Trade History</h2>
+            <p class="card-subtitle">All paper trades — buys, sells, and adjustments.</p>
           </div>
-          <span id="trade-count" class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-400">0 trades</span>
+          <span id="trade-count" class="pill pill-neutral">0 trades</span>
         </div>
-        <div class="overflow-x-auto -mx-6 px-6">
-          <table class="w-full text-sm">
+        <div class="table-wrap">
+          <table class="table">
             <thead>
-              <tr class="text-left text-slate-500 text-xs uppercase tracking-wider border-b border-slate-800">
-                <th class="pb-3 font-medium">Time (UTC)</th>
-                <th class="pb-3 font-medium">Action</th>
-                <th class="pb-3 font-medium">Token</th>
-                <th class="pb-3 font-medium text-right">Amount</th>
-                <th class="pb-3 font-medium text-right">Price</th>
-                <th class="pb-3 font-medium text-right">Value</th>
-                <th class="pb-3 font-medium">Note</th>
+              <tr>
+                <th>Time (UTC)</th>
+                <th>Action</th>
+                <th>By</th>
+                <th>Token</th>
+                <th class="text-right">Amount</th>
+                <th class="text-right">Price</th>
+                <th class="text-right">Value</th>
+                <th>Note</th>
               </tr>
             </thead>
-            <tbody id="trades-table" class="divide-y divide-slate-800/70">
-              <tr><td colspan="7" class="py-6 text-center text-slate-500">Loading trades…</td></tr>
+            <tbody id="trades-table">
+              <tr><td colspan="8" class="table-empty">Loading trades…</td></tr>
             </tbody>
           </table>
         </div>
@@ -153,21 +157,21 @@
     </section>
 
     <!-- How this works -->
-    <section class="mb-10">
-      <div class="rounded-2xl bg-slate-900/60 border border-slate-800 p-6">
-        <h2 class="text-base font-semibold text-slate-100 mb-3">How this works</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-400">
+    <section class="section">
+      <div class="card">
+        <h2 class="card-title">How this works</h2>
+        <div class="grid grid-3 how-grid">
           <div>
-            <div class="text-slate-100 font-medium mb-1">1. Paper buys</div>
-            <p>Each token was bought for $1 of paper money at the live market price when the portfolio was initialized. No real funds are involved.</p>
+            <div class="how-title">1. Paper buys</div>
+            <p class="how-text">Each token was bought for $1 of paper money at the live market price when the portfolio was initialized. No real funds are involved. zAI's 4 picks vs gAi's 2 picks.</p>
           </div>
           <div>
-            <div class="text-slate-100 font-medium mb-1">2. Live price feeds</div>
-            <p>Prices are fetched from CoinGecko and GeckoTerminal every hour by a GitHub Actions cron job. Each update is a git commit, so history is preserved.</p>
+            <div class="how-title">2. Live price feeds</div>
+            <p class="how-text">The dashboard fetches live prices directly from CoinGecko's public API every 60 seconds while you have the page open. No server, no cron needed for live prices.</p>
           </div>
           <div>
-            <div class="text-slate-100 font-medium mb-1">3. Open &amp; clone</div>
-            <p>This dashboard is a static site hosted on GitHub Pages. Clone the repo and run <code class="px-1 py-0.5 rounded bg-slate-800 text-slate-300">python scripts/update_portfolio.py</code> to refresh locally.</p>
+            <div class="how-title">3. Open &amp; clone</div>
+            <p class="how-text">This dashboard is a static site hosted on GitHub Pages. Clone the repo and run <code>python scripts/update_portfolio.py</code> to commit fresh snapshots to the price history.</p>
           </div>
         </div>
       </div>
@@ -175,17 +179,18 @@
 
   </main>
 
-  <footer class="border-t border-slate-800 py-6 mt-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-slate-500">
+  <footer class="footer">
+    <div class="container footer-inner">
       <div>Not financial advice. Paper trading only. Real crypto is risky — never invest more than you can lose.</div>
-      <div class="flex items-center gap-3">
-        <a id="repo-link" href="#" class="hover:text-slate-300 transition-colors">GitHub Repo</a>
+      <div class="footer-links">
+        <a id="repo-link" href="#" class="footer-link">GitHub Repo</a>
         <span>·</span>
         <span id="footer-update">—</span>
       </div>
     </div>
   </footer>
 
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -1,79 +1,95 @@
-# Crypto Paper Trader
+# Crypto Paper Trader — zAI vs gAi
 
-A no-KYC, no-server, no-API-key paper trading tracker for crypto memecoins.
+A no-KYC, no-server paper trading tracker for crypto tokens, with **live
+browser-side price fetching** so the dashboard always shows current prices
+without needing a server cron.
 
-Built as an experiment: track $1 paper buys of 4 hand-picked early-stage tokens
-in real time, with hourly auto-updates via GitHub Actions and a live dashboard
-on GitHub Pages.
+Built as an experiment: track $1 paper buys of 6 hand-picked tokens
+recommended by 2 different AIs (zAI and gAi), and see who makes better bets.
 
 > ⚠️ **Not financial advice.** Paper trading only. Real crypto is risky — never
 > invest more than you can afford to lose.
 
-## What's in here
+## 🥊 The duel
 
-| Component | What it does |
-|---|---|
-| `scripts/` | Python scripts that fetch live prices and maintain the paper portfolio |
-| `data/` | Live portfolio state, trade history, and price history (JSON) — updated hourly |
-| `index.html`, `style.css`, `app.js` | Static dashboard served via GitHub Pages |
-| `.github/workflows/update.yml` | GitHub Actions cron that runs every hour to refresh prices |
-
-## The 4 tracked tokens
-
-| # | Ticker | Chain | Why |
-|---|---|---|---|
-| 🥇 | **TENDIES** | Robinhood | Robinhood Chain's #2 meme, gaining while category bleeds |
-| 🥈 | **CASHCAT** | Robinhood | Robinhood Chain flagship meme, down 70% from ATH |
-| 🥉 | **FOX** (Robin Hood) | Robinhood | Micro-cap moonshot, themed after the chain itself |
-| 🏅 | **PUMP** | Solana | Safer play — Pump.fun's native token with real revenue |
+| AI | Tokens | Strategy |
+|---|---|---|
+| **zAI** | TENDIES, CASHCAT, FOX (Robinhood Chain), PUMP (Solana) | Memecoin-focused — early bets on the new Robinhood Chain narrative + Solana's pump.fun |
+| **gAi** | LISTA, XVS (both BNB chain) | DeFi-focused — established BNB chain lending protocols with real revenue |
 
 Each token was bought for **$1 of paper money** at the live market price when
-the portfolio was initialized. See `data/trades.json` for the exact entry
-prices and timestamps.
+the portfolio was initialized. zAI deployed $4, gAi deployed $2.
 
-## Live dashboard
+## 🌐 Live dashboard
 
-Once GitHub Pages is enabled, the dashboard is available at:
+Once GitHub Pages is enabled (it is, by default), the dashboard is at:
 
 ```
-https://<github-username>.github.io/<repo-name>/
+https://sonamother.github.io/crypto-paper-trader/
 ```
 
 It shows:
-- Total portfolio value + P&L (hero card)
-- Performance summary (best/worst performer, winners vs losers)
-- Portfolio value over time (line chart)
-- Per-token holdings cards with current value, P&L, 24h change
-- Trade history table (all paper buys/sells)
-- Auto-refreshes every 5 minutes (and the data updates hourly via cron)
+- **Hero card** — total portfolio value + P&L (live, refreshing every 60s)
+- **AI Leaderboard** — ranked list of which AI is winning
+- **Per-AI breakdown** — side-by-side cards for zAI's basket vs gAi's basket
+- **Portfolio value over time** — line chart of historical value (from hourly snapshots)
+- **Holdings grid** — 6 token cards with live prices, P&L, 24h change, AI tag
+- **Trade history** — full paper trade log
+- **Live price source** — shows "CoinGecko (live)" or "Cached (rate-limited)" so you know if data is fresh
 
-## How to run locally
+## 🔄 How live updates work (two layers)
+
+The dashboard has **two independent price refresh mechanisms**:
+
+### Layer 1: Browser-side live prices (every 60s)
+When you have the dashboard open, JavaScript fetches live prices directly
+from CoinGecko's public API every 60 seconds. No server needed. This is what
+makes the dashboard feel "live" — prices update on screen while you watch.
+
+### Layer 2: Server-side hourly snapshots (via GitHub Actions cron)
+A Python script runs every hour (via GitHub Actions), fetches prices, and
+commits a new snapshot to `data/price_history.json`. This builds the
+historical chart data over time. Every snapshot is a git commit, so the full
+portfolio history is preserved.
+
+If the cron isn't activated yet (see `SETUP_WORKFLOW.md`), the dashboard
+still works perfectly — you just won't get new chart history points.
+Browser-side live prices keep the dashboard current.
+
+## 🛠 Tech stack
+
+- **Backend** (cron only): Python 3, standard library only (urllib, json)
+- **Frontend**: Vanilla HTML/CSS/JS (no frameworks, no build step)
+- **Charts**: Chart.js via CDN
+- **Hosting**: GitHub Pages (static, free, automatic)
+- **Auto-updates**: GitHub Actions cron (hourly)
+- **Price APIs**: CoinGecko (primary, CORS-enabled), GeckoTerminal (fallback)
+
+No Tailwind CDN. No build step. No npm install. Just open the HTML and it
+works.
+
+## 🚀 How to run locally
 
 ```bash
 # 1. Clone
-git clone https://github.com/<username>/<repo>.git
-cd <repo>
+git clone https://github.com/SonaMother/crypto-paper-trader.git
+cd crypto-paper-trader
 
-# 2. (Optional) Create a virtualenv
-python -m venv .venv && source .venv/bin/activate
-
-# 3. Refresh prices and update the portfolio
+# 2. Refresh prices server-side (writes to data/portfolio.json)
 python scripts/update_portfolio.py
 
-# 4. View the portfolio status
+# 3. Show portfolio status
 python scripts/trade.py status
 
-# 5. Serve the dashboard locally
+# 4. Serve the dashboard locally
 python -m http.server 8000
-# Open http://localhost:8000 in your browser
+# Open http://localhost:8000
 ```
 
-## Manual trades (paper)
-
-You can add new paper buys or sells via the trade CLI:
+## 💼 Manual paper trades
 
 ```bash
-# Buy $5 of TENDIES at current market price
+# Buy $5 of TENDIES at current market price (tagged as zAI)
 python scripts/trade.py buy tendies --usd 5
 
 # Buy 1000 FOX at current market price
@@ -82,15 +98,11 @@ python scripts/trade.py buy fox --amount 1000
 # Sell 50% of PUMP holdings
 python scripts/trade.py sell pump --pct 50
 
-# Sell $3 worth of CASHCAT
-python scripts/trade.py sell cashcat --usd 3
-
 # Show current portfolio status
 python scripts/trade.py status
 ```
 
-After running a manual trade, commit and push the updated `data/` files so the
-dashboard reflects the new state:
+After running a manual trade, commit and push the updated `data/` files:
 
 ```bash
 git add data/
@@ -98,93 +110,139 @@ git commit -m "manual: <describe your trade>"
 git push
 ```
 
-## Re-initializing the portfolio
+## ➕ Adding a new AI's picks
 
-If you want to start fresh (wipe all trades and re-buy $1 of each token at
-current prices):
+To add a new AI's recommendations:
+
+1. Edit `scripts/config.py` — add new token entries with the `recommended_by`
+   field set to the new AI's name (e.g. `"kAi"`).
+2. Edit `config.js` (the browser-side config) — mirror the new tokens and
+   the new AI's style in `aiStyles`.
+3. Run `python scripts/init_portfolio.py` — it will detect the new tokens
+   and buy $1 of each at the current price (smart init — only buys tokens
+   that don't have a position yet).
+4. Push to GitHub: `git add -A && git commit -m "add kAi picks" && git push`
+
+## ➕ Adding a single new token to an existing AI
+
+Same flow as above, but you only add one token entry. The smart init script
+will buy just that one new token.
+
+## 🔄 Re-initializing the portfolio (start over)
 
 ```bash
 python scripts/init_portfolio.py --force
 ```
 
-## Adding a new token to track
+Wipes all trades, holdings, and price history. Rebuys $1 of every token in
+`config.py` at current prices.
 
-Edit `scripts/config.py` and add a new entry to the `TOKENS` list:
-
-```python
-{
-    "id": "wif",                       # internal id, lowercase
-    "ticker": "WIF",
-    "name": "dogwifhat",
-    "chain": "Solana",
-    "coingecko_id": "dogwifhat",       # from coingecko.com URL
-    "contract": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
-    "color": "#f59e0b",
-    "note": "Why we picked it",
-},
-```
-
-Then run `python scripts/trade.py buy wif --usd 1` to open a paper position.
-
-## How price fetching works
-
-1. **Primary**: CoinGecko `/coins/markets` endpoint — single batch call for all
-   tokens, returns price + 24h change + market cap + volume.
-2. **Fallback**: GeckoTerminal per-token endpoint — used when CoinGecko is
-   rate-limited or doesn't have a particular token. GeckoTerminal is also run
-   by CoinGecko but uses a separate API quota.
-
-Both APIs are free and require no API key for the volume we use (~1 call per
-hour). The script retries on rate limits with exponential backoff.
-
-## How the auto-update works
-
-The GitHub Actions workflow at `.github/workflows/update.yml` runs every hour
-at minute :05 (offset from :00 to avoid the GitHub Actions cron peaks). It:
-
-1. Checks out the repo
-2. Installs Python
-3. Runs `python scripts/update_portfolio.py` (fetches prices, updates JSON)
-4. Commits and pushes the updated `data/` files
-
-Every hourly snapshot becomes a git commit, so the full portfolio history is
-preserved in git — you can `git log data/portfolio.json` to see every state
-change.
-
-## Project structure
+## 📁 Project structure
 
 ```
 .
 ├── README.md
-├── requirements.txt
+├── SETUP_WORKFLOW.md              # how to activate the GitHub Actions cron
+├── requirements.txt               # (empty - we use stdlib only)
 ├── .gitignore
-├── index.html                  # dashboard (served by GitHub Pages)
-├── style.css
-├── app.js
+├── index.html                     # dashboard (served by GitHub Pages)
+├── style.css                      # custom dark theme (no Tailwind CDN)
+├── app.js                         # dashboard logic + live price fetching
+├── config.js                      # browser-side token config
 ├── .github/
 │   └── workflows/
-│       └── update.yml          # hourly cron job
+│       └── update.yml             # hourly cron job
 ├── scripts/
-│   ├── config.py               # token definitions
-│   ├── fetch_prices.py         # CoinGecko + GeckoTerminal client
-│   ├── portfolio.py            # portfolio data layer
-│   ├── init_portfolio.py       # initialize with $1 buys
-│   ├── update_portfolio.py     # refresh prices + mark-to-market
-│   ├── trade.py                # manual trade CLI
-│   └── utils.py                # shared helpers
+│   ├── config.py                  # token definitions (with recommended_by)
+│   ├── fetch_prices.py            # CoinGecko + GeckoTerminal client
+│   ├── portfolio.py               # portfolio data layer + per-AI summary
+│   ├── init_portfolio.py          # smart init (only buys missing tokens)
+│   ├── update_portfolio.py        # refresh prices + mark-to-market
+│   ├── trade.py                   # manual trade CLI
+│   ├── utils.py                   # shared helpers
+│   ├── migrate_add_recommended_by.py        # one-shot migration
+│   └── migrate_add_recommended_by_trades.py # one-shot migration
 └── data/
-    ├── portfolio.json          # current holdings + cash
-    ├── trades.json             # trade history
-    └── price_history.json      # time-series of portfolio value
+    ├── portfolio.json             # current holdings + cash
+    ├── trades.json                # trade history (with AI tag per trade)
+    └── price_history.json         # time-series of portfolio value
 ```
 
-## License
+## 📊 Data schemas
+
+### `data/portfolio.json`
+```json
+{
+  "created_at": "2026-07-26T16:46:10Z",
+  "cash_usd": 0.0,
+  "holdings": {
+    "tendies": {
+      "token_id": "tendies",
+      "ticker": "TENDIES",
+      "name": "TENDIES",
+      "chain": "Robinhood",
+      "color": "#f59e0b",
+      "recommended_by": "zAI",
+      "amount": 64.0878,
+      "cost_basis_usd": 1.0,
+      "last_price": 0.01560,
+      "last_price_updated_at": "..."
+    }
+  },
+  "last_updated_at": "..."
+}
+```
+
+### `data/trades.json`
+```json
+[
+  {
+    "id": "uuid",
+    "ts": "2026-07-26T16:46:15Z",
+    "epoch": 1785084375,
+    "action": "BUY",
+    "token_id": "tendies",
+    "ticker": "TENDIES",
+    "chain": "Robinhood",
+    "recommended_by": "zAI",
+    "amount": 64.0878,
+    "price_usd": 0.01560,
+    "value_usd": 1.0,
+    "note": "Initial paper buy: $1.00 of TENDIES (by zAI)"
+  }
+]
+```
+
+### `data/price_history.json`
+```json
+[
+  {
+    "ts": "2026-07-26T16:47:06Z",
+    "epoch": 1785084426,
+    "prices": { "tendies": 0.01560, "cashcat": 0.04916, ... },
+    "portfolio_value_usd": 6.00
+  }
+]
+```
+
+## 🔒 Privacy & security notes
+
+- No real funds are ever moved. This is 100% paper trading.
+- The dashboard makes client-side API calls to CoinGecko from the user's
+  browser — no API keys are exposed.
+- The Python scripts run on GitHub Actions servers (or your local machine)
+  and also use no API keys.
+- **Important**: If you fork this repo, regenerate your own GitHub PAT —
+  don't reuse the one in the commit history.
+
+## 📜 License
 
 MIT — do whatever you want with this code.
 
-## Disclaimer
+## ⚠️ Disclaimer
 
-This is a research project for tracking paper trades. It is not financial
-advice. The tokens tracked here are extremely risky (memecoins on a 3-week-old
-blockchain, micro-cap moonshots, etc.) and most will probably go to zero. The
-purpose is to learn and observe, not to make real money.
+This is a research project for tracking paper trades and comparing AI
+recommendations. It is not financial advice. The tokens tracked here are
+extremely risky (memecoins on a 3-week-old blockchain, micro-cap moonshots,
+volatile DeFi tokens) and most will probably lose value. The purpose is to
+learn and observe, not to make real money.

@@ -10,7 +10,8 @@
     "amount": 64.08781568856911,
     "price_usd": 0.01560359,
     "value_usd": 1.0,
-    "note": "Initial paper buy: $1.00 of TENDIES"
+    "note": "Initial paper buy: $1.00 of TENDIES",
+    "recommended_by": "zAI"
   },
   {
     "id": "03ab6d11-cc83-4487-9158-8c589b24529f",
@@ -23,7 +24,8 @@
     "amount": 19.714144898965007,
     "price_usd": 0.050725,
     "value_usd": 1.0,
-    "note": "Initial paper buy: $1.00 of CASHCAT"
+    "note": "Initial paper buy: $1.00 of CASHCAT",
+    "recommended_by": "zAI"
   },
   {
     "id": "bbd41a0e-e684-4a35-9594-2f92660214df",
@@ -36,7 +38,8 @@
     "amount": 966.8281269638695,
     "price_usd": 0.00103431,
     "value_usd": 1.0,
-    "note": "Initial paper buy: $1.00 of FOX"
+    "note": "Initial paper buy: $1.00 of FOX",
+    "recommended_by": "zAI"
   },
   {
     "id": "0a380869-d43d-488a-90e1-60cf968e7e2b",
@@ -49,6 +52,35 @@
     "amount": 533.0774561543792,
     "price_usd": 0.0018759,
     "value_usd": 1.0,
-    "note": "Initial paper buy: $1.00 of PUMP"
+    "note": "Initial paper buy: $1.00 of PUMP",
+    "recommended_by": "zAI"
+  },
+  {
+    "id": "3013e2ca-74ec-48f3-8d39-8fa2c59cb980",
+    "ts": "2026-07-26T17:45:20Z",
+    "epoch": 1785087920,
+    "action": "BUY",
+    "token_id": "lista",
+    "ticker": "LISTA",
+    "chain": "BSC",
+    "recommended_by": "gAi",
+    "amount": 21.10532825117029,
+    "price_usd": 0.0473814,
+    "value_usd": 1.0,
+    "note": "Initial paper buy: $1.00 of LISTA (by gAi)"
+  },
+  {
+    "id": "4aa043f1-835d-4870-b05c-717dfba07677",
+    "ts": "2026-07-26T17:45:20Z",
+    "epoch": 1785087920,
+    "action": "BUY",
+    "token_id": "xvs",
+    "ticker": "XVS",
+    "chain": "BSC",
+    "recommended_by": "gAi",
+    "amount": 0.3401360544217687,
+    "price_usd": 2.94,
+    "value_usd": 1.0,
+    "note": "Initial paper buy: $1.00 of XVS (by gAi)"
   }
 ]

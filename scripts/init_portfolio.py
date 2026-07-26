@@ -1,19 +1,18 @@
 """
 Initialize the paper portfolio by buying $1 of each tracked token at current prices.
 
-Usage:
-    python scripts/init_portfolio.py            # initializes if not yet initialized
-    python scripts/init_portfolio.py --force    # wipe and re-initialize
+If called with no args, it will:
+  - Initialize the portfolio from scratch if no holdings exist
+  - Buy any NEW tokens that have been added to config.py but don't have a position yet
+    (idempotent - safe to run after adding new tokens to config.py)
 
-This script is idempotent: if the portfolio already has holdings, it will refuse
-to overwrite them unless --force is passed.
+Use --force to wipe everything and re-initialize from scratch.
 """
 
 import argparse
 import os
 import sys
 
-# Allow running both as `python scripts/init_portfolio.py` and from inside scripts/
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config import TOKENS, INITIAL_BUY_USD
@@ -35,8 +34,53 @@ def main():
     has_holdings = bool(existing.get("holdings"))
 
     if has_holdings and not args.force:
-        print("Portfolio already has holdings. Use --force to wipe and re-initialize.")
-        sys.exit(1)
+        # Smart init: only buy tokens that don't have a position yet
+        new_tokens = []
+        for t in TOKENS:
+            if t["id"] not in existing["holdings"] or existing["holdings"][t["id"]]["amount"] == 0:
+                new_tokens.append(t)
+
+        if not new_tokens:
+            print("All tokens already have positions. Nothing to do.")
+            print("Use --force to wipe and re-initialize from scratch.")
+            return
+
+        print(f"Found {len(new_tokens)} new token(s) to buy: {[t['ticker'] for t in new_tokens]}")
+        # Fund the paper account for the new buys
+        capital_needed = INITIAL_BUY_USD * len(new_tokens)
+        p = load_portfolio()
+        p["cash_usd"] = p.get("cash_usd", 0) + capital_needed
+        save_portfolio(p)
+        print(f"Funded paper account with additional ${capital_needed:.2f} USD")
+
+        print("\nFetching current prices...")
+        prices = fetch_all_token_prices()
+
+        print("\nExecuting paper buys for new tokens:")
+        print(f"{'Token':<10} {'Price (USD)':<18} {'Amount':<20} {'Status'}")
+        print("-" * 70)
+        for token in new_tokens:
+            tid = token["id"]
+            info = prices.get(tid, {})
+            price = info.get("price") if info else None
+            if price is None or price <= 0:
+                print(f"{token['ticker']:<10} {'N/A':<18} {'N/A':<20} SKIP (price unavailable)")
+                continue
+            amount = INITIAL_BUY_USD / price
+            trade = record_trade(
+                action="BUY",
+                token_id=tid,
+                amount=amount,
+                price_usd=price,
+                note=f"Initial paper buy: ${INITIAL_BUY_USD:.2f} of {token['ticker']} (by {token.get('recommended_by', 'unknown')})",
+            )
+            print(f"{token['ticker']:<10} ${price:<17.8g} {amount:<20.6f} OK")
+
+        print("\nMarking to market...")
+        prices2 = fetch_all_token_prices()
+        update_prices(prices2)
+        print("\n✓ Done.")
+        return
 
     if args.force:
         print("Wiping existing portfolio/trades/history...")
@@ -58,14 +102,14 @@ def main():
 
     # Buy $1 of each token
     print("\nExecuting paper buys:")
-    print(f"{'Token':<10} {'Price (USD)':<18} {'Amount':<20} {'Status'}")
-    print("-" * 70)
+    print(f"{'Token':<10} {'By':<5} {'Price (USD)':<18} {'Amount':<20} {'Status'}")
+    print("-" * 75)
     for token in TOKENS:
         tid = token["id"]
         info = prices.get(tid, {})
         price = info.get("price") if info else None
         if price is None or price <= 0:
-            print(f"{token['ticker']:<10} {'N/A':<18} {'N/A':<20} SKIP (price unavailable)")
+            print(f"{token['ticker']:<10} {token.get('recommended_by', '?'):<5} {'N/A':<18} {'N/A':<20} SKIP (price unavailable)")
             continue
         amount = INITIAL_BUY_USD / price
         trade = record_trade(
@@ -73,9 +117,9 @@ def main():
             token_id=tid,
             amount=amount,
             price_usd=price,
-            note=f"Initial paper buy: ${INITIAL_BUY_USD:.2f} of {token['ticker']}",
+            note=f"Initial paper buy: ${INITIAL_BUY_USD:.2f} of {token['ticker']} (by {token.get('recommended_by', 'unknown')})",
         )
-        print(f"{token['ticker']:<10} ${price:<17.8g} {amount:<20.6f} OK")
+        print(f"{token['ticker']:<10} {token.get('recommended_by', '?'):<5} ${price:<17.8g} {amount:<20.6f} OK")
 
     # Update prices one more time so portfolio.json reflects fresh mark-to-market
     print("\nMarking to market...")

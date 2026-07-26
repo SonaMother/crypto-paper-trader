@@ -121,6 +121,7 @@ def record_trade(action: str, token_id: str, amount: float, price_usd: float,
         "token_id": token_id,
         "ticker": token["ticker"],
         "chain": token["chain"],
+        "recommended_by": token.get("recommended_by", "unknown"),
         "amount": amount,
         "price_usd": price_usd,
         "value_usd": round(value_usd, 6),
@@ -140,6 +141,7 @@ def record_trade(action: str, token_id: str, amount: float, price_usd: float,
         "name": token["name"],
         "chain": token["chain"],
         "color": token["color"],
+        "recommended_by": token.get("recommended_by", "unknown"),
         "amount": 0.0,
         "cost_basis_usd": 0.0,
         "last_price": None,
@@ -205,7 +207,8 @@ def update_prices(prices_by_token: dict) -> None:
 
 
 def compute_summary() -> dict:
-    """Return a summary dict: total cost basis, total current value, total P&L."""
+    """Return a summary dict: total cost basis, total current value, total P&L,
+    per-token info, and per-AI grouped stats."""
     p = load_portfolio()
     total_cost = 0.0
     total_value = p.get("cash_usd", 0.0)
@@ -214,10 +217,12 @@ def compute_summary() -> dict:
     for token in TOKENS:
         tid = token["id"]
         h = p["holdings"].get(tid)
+        recommended_by = token.get("recommended_by", "unknown")
         if not h:
             per_token.append({
                 "token_id": tid, "ticker": token["ticker"], "chain": token["chain"],
-                "color": token["color"], "amount": 0, "cost_basis_usd": 0,
+                "color": token["color"], "recommended_by": recommended_by,
+                "amount": 0, "cost_basis_usd": 0,
                 "last_price": None, "current_value_usd": 0, "pnl_usd": 0, "pnl_pct": 0,
             })
             continue
@@ -233,6 +238,7 @@ def compute_summary() -> dict:
             "ticker": h["ticker"],
             "chain": h["chain"],
             "color": h["color"],
+            "recommended_by": h.get("recommended_by", recommended_by),
             "amount": h["amount"],
             "cost_basis_usd": cost,
             "last_price": price,
@@ -240,6 +246,31 @@ def compute_summary() -> dict:
             "pnl_usd": pnl,
             "pnl_pct": pnl_pct,
         })
+
+    # Per-AI grouping
+    per_ai = {}
+    for h in per_token:
+        ai = h["recommended_by"]
+        if ai not in per_ai:
+            per_ai[ai] = {
+                "ai": ai,
+                "num_tokens": 0,
+                "cost_basis_usd": 0.0,
+                "current_value_usd": 0.0,
+                "pnl_usd": 0.0,
+                "pnl_pct": 0.0,
+                "tokens": [],
+            }
+        per_ai[ai]["num_tokens"] += 1
+        per_ai[ai]["cost_basis_usd"] += h["cost_basis_usd"]
+        per_ai[ai]["current_value_usd"] += h["current_value_usd"]
+        per_ai[ai]["tokens"].append(h["token_id"])
+
+    for ai, stats in per_ai.items():
+        stats["cost_basis_usd"] = round(stats["cost_basis_usd"], 6)
+        stats["current_value_usd"] = round(stats["current_value_usd"], 6)
+        stats["pnl_usd"] = round(stats["current_value_usd"] - stats["cost_basis_usd"], 6)
+        stats["pnl_pct"] = (stats["pnl_usd"] / stats["cost_basis_usd"] * 100) if stats["cost_basis_usd"] > 0 else 0
 
     return {
         "created_at": p.get("created_at"),
@@ -250,4 +281,5 @@ def compute_summary() -> dict:
         "total_pnl_usd": total_value - total_cost,
         "total_pnl_pct": ((total_value - total_cost) / total_cost * 100) if total_cost > 0 else 0,
         "holdings": per_token,
+        "per_ai": list(per_ai.values()),
     }

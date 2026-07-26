@@ -10,8 +10,9 @@
       "color": "#f59e0b",
       "amount": 64.08781569,
       "cost_basis_usd": 1.0,
-      "last_price": 0.01558901,
-      "last_price_updated_at": "2026-07-26T16:55:34Z"
+      "last_price": 0.01515646,
+      "last_price_updated_at": "2026-07-26T17:45:35Z",
+      "recommended_by": "zAI"
     },
     "cashcat": {
       "token_id": "cashcat",
@@ -21,8 +22,9 @@
       "color": "#3b82f6",
       "amount": 19.7141449,
       "cost_basis_usd": 1.0,
-      "last_price": 0.04936785,
-      "last_price_updated_at": "2026-07-26T16:55:34Z"
+      "last_price": 0.04769468048,
+      "last_price_updated_at": "2026-07-26T17:49:40Z",
+      "recommended_by": "zAI"
     },
     "fox": {
       "token_id": "fox",
@@ -32,8 +34,9 @@
       "color": "#10b981",
       "amount": 966.82812696,
       "cost_basis_usd": 1.0,
-      "last_price": 0.00102214,
-      "last_price_updated_at": "2026-07-26T16:55:34Z"
+      "last_price": 0.001045309885,
+      "last_price_updated_at": "2026-07-26T17:49:40Z",
+      "recommended_by": "zAI"
     },
     "pump": {
       "token_id": "pump",
@@ -43,9 +46,34 @@
       "color": "#8b5cf6",
       "amount": 533.07745615,
       "cost_basis_usd": 1.0,
-      "last_price": 0.0018592,
-      "last_price_updated_at": "2026-07-26T16:55:34Z"
+      "last_price": 0.001844240038,
+      "last_price_updated_at": "2026-07-26T17:49:40Z",
+      "recommended_by": "zAI"
+    },
+    "lista": {
+      "token_id": "lista",
+      "ticker": "LISTA",
+      "name": "Lista DAO",
+      "chain": "BSC",
+      "color": "#ec4899",
+      "recommended_by": "gAi",
+      "amount": 21.10532825,
+      "cost_basis_usd": 1.0,
+      "last_price": 0.0473814,
+      "last_price_updated_at": "2026-07-26T17:45:35Z"
+    },
+    "xvs": {
+      "token_id": "xvs",
+      "ticker": "XVS",
+      "name": "Venus",
+      "chain": "BSC",
+      "color": "#06b6d4",
+      "recommended_by": "gAi",
+      "amount": 0.34013605,
+      "cost_basis_usd": 1.0,
+      "last_price": 2.94,
+      "last_price_updated_at": "2026-07-26T17:45:35Z"
     }
   },
-  "last_updated_at": "2026-07-26T16:55:34Z"
+  "last_updated_at": "2026-07-26T17:49:49Z"
 }
