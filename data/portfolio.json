@@ -32,8 +32,8 @@
       "name": "Robin Hood",
       "chain": "Robinhood",
       "color": "#10b981",
-      "amount": 966.82812696,
-      "cost_basis_usd": 1.0,
+      "amount": 1091.80469385,
+      "cost_basis_usd": 1.1,
       "last_price": 0.00080016,
       "last_price_updated_at": "2026-07-27T06:06:38Z",
       "recommended_by": "zAI"
@@ -75,5 +75,5 @@
       "last_price_updated_at": "2026-07-27T06:06:38Z"
     }
   },
-  "last_updated_at": "2026-07-27T06:06:38Z"
+  "last_updated_at": "2026-07-27T06:08:40Z"
 }

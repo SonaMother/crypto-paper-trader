@@ -82,5 +82,19 @@
     "price_usd": 2.94,
     "value_usd": 1.0,
     "note": "Initial paper buy: $1.00 of XVS (by gAi)"
+  },
+  {
+    "id": "180ae087-0d00-47a6-b6d2-1fdf99bc8d87",
+    "ts": "2026-07-27T06:08:40Z",
+    "epoch": 1785132520,
+    "action": "BUY",
+    "token_id": "fox",
+    "ticker": "FOX",
+    "chain": "Robinhood",
+    "recommended_by": "zAI",
+    "amount": 124.97656689370743,
+    "price_usd": 0.00080015,
+    "value_usd": 0.1,
+    "note": "Test remote API buy"
   }
 ]

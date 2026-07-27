@@ -34,5 +34,20 @@
       "portfolio_value": 5.594402599740685,
       "pnl_pct": -6.75995667098858
     }
+  },
+  {
+    "ts": "2026-07-27T06:08:40Z",
+    "epoch": 1785132520,
+    "actor": "zAI",
+    "action": "buy",
+    "details": "zAI bought 124.976567 FOX @ $0.00080015 ($0.10)",
+    "data": {
+      "trade_id": "180ae087-0d00-47a6-b6d2-1fdf99bc8d87",
+      "token_id": "fox",
+      "amount": 124.97656689370743,
+      "price_usd": 0.00080015,
+      "usd_value": 0.1,
+      "via": "remote_api"
+    }
   }
 ]
