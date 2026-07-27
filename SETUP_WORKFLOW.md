@@ -1,36 +1,52 @@
-# GitHub Actions Workflow File — Manual Setup Required
+# GitHub Actions Workflow File — Manual Setup Required (5 minutes)
 
-The Personal Access Token you provided only has `repo` scope, not `workflow`
-scope. This means we couldn't push the GitHub Actions workflow file directly.
-You have two options to activate the hourly auto-update:
+The Personal Access Token you shared only has `repo` scope, not `workflow`
+scope. This means we can't push the GitHub Actions workflow file via API.
+**You need to add it manually via the GitHub web UI.**
 
-## Option 1: Add the workflow file via GitHub Web UI (EASIEST)
+This is the ONE thing that turns on 24/7 background operation. Without it:
+- ✅ Dashboard live prices still work (browser-side, every 60s when page is open)
+- ❌ No new historical chart points get added
+- ❌ No automated rule triggers when you're not looking at the dashboard
+- ❌ Activity log doesn't get new "refresh" events
 
-1. Go to: https://github.com/SonaMother/crypto-paper-trader/actions/new
-2. Click "set up a workflow yourself" (skip the suggested templates)
-3. Replace the default content with the YAML below
-4. Name the file `update.yml` (in the `.github/workflows/` directory — GitHub
-   will auto-prefix it)
-5. Click "Commit changes"
-6. The first run will happen automatically on the next hour mark (`HH:05`)
+With it activated:
+- ✅ All of the above works 24/7, even when your PC is off
+- ✅ Rules trigger automatically and execute paper sells at take-profit/stop-loss levels
+- ✅ Activity log records every hourly refresh
+- ✅ AI agents can trigger refreshes on-demand via the API
 
-### Paste this YAML:
+---
+
+## Setup (Option A — easiest, 3 minutes)
+
+1. **Open this URL in your browser**:
+   https://github.com/SonaMother/crypto-paper-trader/actions/new
+
+2. Click **"set up a workflow yourself"** (the link near the top, not a template)
+
+3. GitHub shows an editor with a default `blank.yml`. **Replace everything** in the editor with this YAML:
 
 ```yaml
 name: Update Portfolio
 
 on:
   schedule:
-    # Run every hour at minute 5 (offset from :00 to avoid GitHub Actions cron peaks)
-    - cron: '5 * * * *'
-  workflow_dispatch: {}   # Allow manual trigger from the Actions tab
+    # Run every 15 minutes (4x/hour for responsive updates)
+    - cron: '5,20,35,50 * * * *'
+  workflow_dispatch: {}
 
 permissions:
-  contents: write          # Required so the bot can commit and push updates
+  contents: write
+
+concurrency:
+  group: portfolio-update
+  cancel-in-progress: false
 
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,8 +62,11 @@ jobs:
           pip install -r requirements.txt
 
       - name: Update portfolio
+        id: update
         run: |
-          python scripts/update_portfolio.py
+          python scripts/update_portfolio.py 2>&1 | tee update.log
+          PNL=$(grep "P&L" update.log | head -1 | sed 's/.*P&L *: *//' || echo "unknown")
+          echo "pnl_summary=$PNL" >> $GITHUB_OUTPUT
 
       - name: Commit and push
         run: |
@@ -57,14 +76,26 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "chore(data): hourly portfolio update $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git commit -m "chore(data): portfolio update $(date -u +'%Y-%m-%dT%H:%M:%SZ') — ${{ steps.update.outputs.pnl_summary }}"
             git push
           fi
 ```
 
-## Option 2: Generate a new PAT with `workflow` scope and push locally
+4. Set the filename to `update.yml` (GitHub will prefix it with `.github/workflows/` automatically — just type `update.yml` in the filename field)
 
-1. Go to: https://github.com/settings/tokens
+5. Click **"Commit changes"** (choose "Commit directly to main")
+
+6. Done! The first run will happen automatically on the next 5/20/35/50 minute mark. You can also trigger it manually:
+   - Go to https://github.com/SonaMother/crypto-paper-trader/actions/workflows/update.yml
+   - Click "Run workflow" → "Run workflow"
+
+---
+
+## Setup (Option B — via new PAT, 5 minutes)
+
+If you want to be able to push workflow files via API in the future:
+
+1. Go to https://github.com/settings/tokens
 2. Click "Generate new token (classic)"
 3. Select scopes: `repo` AND `workflow`
 4. Generate, copy the new token
@@ -73,36 +104,35 @@ jobs:
    git clone https://github.com/SonaMother/crypto-paper-trader.git
    cd crypto-paper-trader
    ```
-6. The workflow file already exists in your local clone at
-   `.github/workflows/update.yml`. Add and push it:
+6. The workflow file already exists on disk at `.github/workflows/update.yml`.
+   Add and push it:
    ```bash
    git add .github/workflows/update.yml
-   git commit -m "ci: add hourly portfolio update workflow"
+   git commit -m "ci: add portfolio update workflow"
    git push
    ```
 
-## Option 3: Run updates manually
+---
 
-Until you set up the cron, you can refresh prices manually anytime:
+## After activation
 
-```bash
-git clone https://github.com/SonaMother/crypto-paper-trader.git
-cd crypto-paper-trader
-python scripts/update_portfolio.py
-git add data/
-git commit -m "data: manual refresh"
-git push
-```
-
-The dashboard will auto-refresh every 5 minutes once you open it, so as soon
-as you push new data, the dashboard shows the new values.
+Once the workflow is active:
+- The dashboard's "Cron status" indicator will switch from "Not activated" to "Active"
+- New entries will appear in the Activity Log every 15 minutes
+- The portfolio value chart will start populating with hourly data points
+- Automated trading rules will trigger without you needing to be online
+- AI agents can trigger on-demand refreshes via `python scripts/api.py --remote refresh`
 
 ---
 
 ## ⚠️ Security reminder
 
-The PAT you shared publicly (`ghp_...`) has been used to set up this repo.
-**Please revoke it now** at https://github.com/settings/tokens and generate
-a new one with only the scopes you need (e.g. `repo` + `workflow` for this
-project). Even though the repo is public, the PAT could be used to push
-malicious code to any of your repos.
+**Revoke the PAT you shared publicly.** Go to https://github.com/settings/tokens
+and delete the `ghp_Osiu...` token. Generate a new one with only the scopes
+you need:
+- For just reading the portfolio via API: `public_repo` (or use the repo without auth since it's public)
+- For triggering the workflow via the dashboard's "Trigger cron" button: `repo` + `workflow`
+- For full read/write via the API: `repo` + `workflow`
+
+Store the new PAT in your browser's dashboard (the "API token" input on the
+hero card) — it's saved in localStorage and only sent to GitHub's API.
