@@ -2,7 +2,7 @@
 Refresh all token prices, update the portfolio, evaluate trading rules,
 and log the event to the activity log.
 
-This is the script that GitHub Actions runs every hour.
+This is the script that GitHub Actions runs every 15 minutes.
 Safe to run anytime locally as well.
 
 Usage:
@@ -11,6 +11,7 @@ Usage:
 
 import os
 import sys
+import json
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -18,7 +19,27 @@ from fetch_prices import fetch_all_token_prices
 from portfolio import update_prices, compute_summary
 from rules_engine import evaluate_rules
 from activity_log import log_event
-from utils import fmt_usd, fmt_pct
+from utils import fmt_usd, fmt_pct, now_iso, write_json
+from pathlib import Path
+
+# Path to write a public health.json snapshot (read by the dashboard)
+HEALTH_JSON_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "health.json")
+
+
+def write_health_snapshot(summary: dict, fetched_count: int, total_count: int, rules_triggered: int) -> None:
+    """Write a public health.json snapshot for the dashboard to read."""
+    snapshot = {
+        "timestamp": now_iso(),
+        "overall_status": "healthy" if fetched_count > 0 else "degraded",
+        "fetched_prices": fetched_count,
+        "total_prices": total_count,
+        "rules_triggered": rules_triggered,
+        "portfolio_value_usd": summary["total_value_usd"],
+        "portfolio_pnl_usd": summary["total_pnl_usd"],
+        "portfolio_pnl_pct": summary["total_pnl_pct"],
+        "per_ai": summary.get("per_ai", []),
+    }
+    write_json(HEALTH_JSON_PATH, snapshot)
 
 
 def main():
@@ -43,6 +64,9 @@ def main():
         print("[warn] The dashboard will still show cached prices + live browser-side prices.")
         log_event("cron", "refresh_failed", f"Refresh failed: 0/{fetched_count + failed_count} prices fetched",
                   {"fetched": 0, "total": fetched_count + failed_count})
+        # Still write a health snapshot so the dashboard shows the failed run
+        summary = compute_summary()
+        write_health_snapshot(summary, 0, fetched_count + failed_count, 0)
         return
 
     print("\nUpdating portfolio...")
@@ -66,6 +90,9 @@ def main():
     print("\nPer-AI breakdown:")
     for ai in s.get('per_ai', []):
         print(f"  {ai['ai']}: {ai['num_tokens']} tokens, P&L = {fmt_usd(ai['pnl_usd'])} ({fmt_pct(ai['pnl_pct'])})")
+
+    # Write public health snapshot for the dashboard
+    write_health_snapshot(s, fetched_count, fetched_count + failed_count, len(triggered))
 
     # Log the refresh event
     log_event("cron", "refresh",

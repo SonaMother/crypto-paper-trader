@@ -22,6 +22,7 @@ const FILES = {
   priceHistory:  `${DATA_BASE}/price_history.json`,
   activityLog:   `${DATA_BASE}/activity_log.json`,
   rules:         `${DATA_BASE}/rules.json`,
+  health:        `${DATA_BASE}/health.json`,
 };
 
 const COINGECKO_MARKETS = "https://api.coingecko.com/api/v3/coins/markets";
@@ -41,6 +42,7 @@ let cachedTrades = [];
 let cachedPriceHistory = [];
 let cachedActivityLog = [];
 let cachedRules = [];
+let cachedHealth = null;
 
 // Latest live prices (from CoinGecko, fetched every 60s)
 let livePrices = {};  // { token_id: { price, change_24h, market_cap, volume_24h } }
@@ -580,12 +582,13 @@ async function refreshAll() {
 
   try {
     // Fetch server-side data + live prices in parallel
-    const [portfolio, trades, priceHistory, activityLog, rules, live] = await Promise.all([
+    const [portfolio, trades, priceHistory, activityLog, rules, health, live] = await Promise.all([
       fetchJson(FILES.portfolio),
       fetchJson(FILES.trades),
       fetchJson(FILES.priceHistory),
       fetchJson(FILES.activityLog).catch(() => []),
       fetchJson(FILES.rules).catch(() => []),
+      fetchJson(FILES.health).catch(() => null),
       fetchLivePrices(),
     ]);
 
@@ -594,6 +597,7 @@ async function refreshAll() {
     cachedPriceHistory = priceHistory;
     cachedActivityLog = activityLog;
     cachedRules = rules;
+    cachedHealth = health;
     livePrices = live;
 
     const summary = computeSummary(portfolio, live);
@@ -603,7 +607,7 @@ async function refreshAll() {
     renderHoldings(summary);
     renderTrades(trades);
     renderChart(priceHistory);
-    renderSystemStatus(activityLog, rules);
+    renderSystemStatus(activityLog, rules, health);
     renderActivityLog(activityLog);
     renderRulesList(rules);
 
@@ -653,41 +657,59 @@ function startCountdown() {
 // System status, activity log, rules list renderers
 // ============================================================================
 
-function renderSystemStatus(activityLog, rules) {
-  // Cron status: derived from whether we have any "refresh" events
-  const lastRefresh = activityLog ? activityLog.find(e => e.action === "refresh" || e.action === "refresh_failed") : null;
-  const lastRefreshFailed = activityLog ? activityLog.find(e => e.action === "refresh_failed") : null;
-  const lastAiAction = activityLog ? activityLog.find(e => ["buy", "sell", "rule_triggered", "rule_added"].includes(e.action) && e.actor !== "cron" && e.actor !== "system") : null;
-  const enabledRules = rules ? rules.filter(r => r.enabled) : [];
-
+function renderSystemStatus(activityLog, rules, health) {
+  // Use health.json snapshot if available (more reliable than inferring from activity log)
   // Cron status
   const cronEl = document.getElementById("status-cron");
   const cronDetailEl = document.getElementById("status-cron-detail");
-  if (lastRefresh) {
-    if (lastRefreshFailed && lastRefreshFailed.ts >= (lastRefresh.ts || "")) {
-      cronEl.textContent = "Degraded";
-      cronEl.className = "status-value text-down";
-      cronDetailEl.textContent = `Last run failed: ${fmtRelative(lastRefreshFailed.ts)}`;
-    } else {
+
+  if (health) {
+    // We have a health snapshot from the latest cron run
+    const healthAge = (Date.now() - new Date(health.timestamp).getTime()) / 1000;
+    if (health.overall_status === "healthy" && healthAge < 1800) {
+      // Healthy + fresh (within 30 min)
       cronEl.textContent = "Active";
       cronEl.className = "status-value text-up";
-      cronDetailEl.textContent = `Last successful run: ${fmtRelative(lastRefresh.ts)}`;
+      cronDetailEl.textContent = `Last run: ${fmtRelative(health.timestamp)} (${health.fetched_prices}/${health.total_prices} prices)`;
+    } else if (health.overall_status === "degraded") {
+      cronEl.textContent = "Degraded";
+      cronEl.className = "status-value text-down";
+      cronDetailEl.textContent = `Last run: ${fmtRelative(health.timestamp)} (price fetch failed)`;
+    } else if (healthAge >= 1800) {
+      cronEl.textContent = "Stale";
+      cronEl.className = "status-value text-down";
+      cronDetailEl.textContent = `Last run ${Math.round(healthAge/60)}m ago — check Actions tab`;
+    } else {
+      cronEl.textContent = "Unknown";
+      cronEl.className = "status-value text-muted";
+      cronDetailEl.textContent = `Last run: ${fmtRelative(health.timestamp)}`;
     }
   } else {
-    cronEl.textContent = "Not activated";
-    cronEl.className = "status-value text-muted";
-    cronDetailEl.textContent = "See SETUP_WORKFLOW.md to activate";
+    // Fall back to inferring from activity log
+    const lastRefresh = activityLog ? activityLog.find(e => e.action === "refresh" || e.action === "refresh_failed") : null;
+    if (lastRefresh) {
+      cronEl.textContent = "Active";
+      cronEl.className = "status-value text-up";
+      cronDetailEl.textContent = `Last run: ${fmtRelative(lastRefresh.ts)}`;
+    } else {
+      cronEl.textContent = "Not activated";
+      cronEl.className = "status-value text-muted";
+      cronDetailEl.textContent = "See SETUP_WORKFLOW.md to activate";
+    }
   }
 
-  // Last refresh
-  document.getElementById("status-last-refresh").textContent = lastRefresh ? fmtRelative(lastRefresh.ts) : "—";
-  document.getElementById("status-last-refresh-detail").textContent = lastRefresh ? (lastRefresh.details || "").slice(0, 80) : "No refreshes yet";
+  // Last refresh (from activity log, since it has more detail)
+  const lastRefreshEvent = activityLog ? activityLog.find(e => e.action === "refresh" || e.action === "refresh_failed") : null;
+  document.getElementById("status-last-refresh").textContent = lastRefreshEvent ? fmtRelative(lastRefreshEvent.ts) : (health ? fmtRelative(health.timestamp) : "—");
+  document.getElementById("status-last-refresh-detail").textContent = lastRefreshEvent ? (lastRefreshEvent.details || "").slice(0, 80) : (health ? `P&L: ${fmtUsd(health.portfolio_pnl_usd)} (${fmtPct(health.portfolio_pnl_pct)})` : "No refreshes yet");
 
   // Last AI action
+  const lastAiAction = activityLog ? activityLog.find(e => ["buy", "sell", "rule_triggered", "rule_added"].includes(e.action) && e.actor !== "cron" && e.actor !== "system") : null;
   document.getElementById("status-last-ai").textContent = lastAiAction ? `${lastAiAction.actor}` : "—";
   document.getElementById("status-last-ai-detail").textContent = lastAiAction ? `${lastAiAction.action} · ${fmtRelative(lastAiAction.ts)}` : "No AI actions yet";
 
   // Active rules
+  const enabledRules = rules ? rules.filter(r => r.enabled) : [];
   document.getElementById("status-rules").textContent = enabledRules.length;
   document.getElementById("status-rules-detail").textContent = `${rules ? rules.length : 0} total (incl. disabled)`;
 }
