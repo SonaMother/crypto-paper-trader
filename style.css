@@ -788,8 +788,219 @@ a {
 }
 
 /* ==========================================================================
-   Custom scrollbar
+   System status strip
    ========================================================================== */
+
+.card-status {
+  padding: 16px 20px;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.status-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+  border-left: 2px solid var(--border-softer);
+  padding-left: 14px;
+}
+
+.status-cell-action {
+  border-left-color: var(--up);
+}
+
+.status-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.status-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.status-detail {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Rules list
+   ========================================================================== */
+
+.rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rule-row {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--border-softer);
+  font-size: 13px;
+}
+
+.rule-row-disabled {
+  opacity: 0.5;
+}
+
+.rule-type-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rule-type-take_profit {
+  background: var(--up-soft);
+  color: #34d399;
+  border: 1px solid var(--up-border);
+}
+
+.rule-type-stop_loss {
+  background: var(--down-soft);
+  color: #f87171;
+  border: 1px solid var(--down-border);
+}
+
+.rule-token {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 12px;
+  padding: 2px 8px;
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: 4px;
+}
+
+.rule-desc {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.rule-threshold {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Buttons (variations)
+   ========================================================================== */
+
+.btn-primary {
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+}
+
+.btn-primary:disabled {
+  background: #1e293b;
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.btn-xs {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+/* ==========================================================================
+   Token input (for GitHub PAT)
+   ========================================================================== */
+
+.hero-stat-token {
+  flex-basis: 100%;
+  margin-top: 8px;
+}
+
+.token-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.token-input {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  width: 220px;
+  max-width: 100%;
+}
+
+.token-input:focus {
+  outline: none;
+  border-color: var(--ai-zai);
+}
+
+.token-input::placeholder {
+  color: var(--text-dim);
+}
+
+/* ==========================================================================
+   Activity log actor pills
+   ========================================================================== */
+
+.actor-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.actor-pill-cron { background: rgba(100, 116, 139, 0.2); color: #cbd5e1; }
+.actor-pill-system { background: rgba(100, 116, 139, 0.2); color: #cbd5e1; }
+.actor-pill-human { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.actor-pill-zAI { background: var(--ai-zai-soft); color: #a78bfa; }
+.actor-pill-gAi { background: var(--ai-gai-soft); color: #22d3ee; }
+
+.action-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(30, 41, 59, 0.6);
+  color: var(--text-secondary);
+}
+
+.action-pill-refresh { background: rgba(100, 116, 139, 0.15); color: #cbd5e1; }
+.action-pill-buy { background: var(--up-soft); color: #34d399; }
+.action-pill-sell { background: var(--down-soft); color: #f87171; }
+.action-pill-rule_triggered { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.action-pill-rule_added { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+.action-pill-refresh_failed { background: var(--down-soft); color: #f87171; }
 
 .table-wrap::-webkit-scrollbar {
   height: 6px;

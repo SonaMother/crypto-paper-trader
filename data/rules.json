@@ -1,0 +1,32 @@
+[
+  {
+    "id": "tp-zai-basket-2x",
+    "enabled": true,
+    "token_id": "all",
+    "type": "take_profit",
+    "threshold": 100,
+    "action": "sell_50pct",
+    "created_by": "zAI",
+    "note": "Take 50% profit on any zAI pick that 2x's"
+  },
+  {
+    "id": "sl-zai-basket-80pct",
+    "enabled": true,
+    "token_id": "all",
+    "type": "stop_loss",
+    "threshold": -80,
+    "action": "sell_100pct",
+    "created_by": "zAI",
+    "note": "Cut losses at -80% (near-zero)"
+  },
+  {
+    "id": "tp-gai-basket-2x",
+    "enabled": true,
+    "token_id": "all",
+    "type": "take_profit",
+    "threshold": 100,
+    "action": "sell_50pct",
+    "created_by": "gAi",
+    "note": "Take 50% profit on any gAi pick that 2x's"
+  }
+]

@@ -20,9 +20,14 @@ const FILES = {
   portfolio:     `${DATA_BASE}/portfolio.json`,
   trades:        `${DATA_BASE}/trades.json`,
   priceHistory:  `${DATA_BASE}/price_history.json`,
+  activityLog:   `${DATA_BASE}/activity_log.json`,
+  rules:         `${DATA_BASE}/rules.json`,
 };
 
 const COINGECKO_MARKETS = "https://api.coingecko.com/api/v3/coins/markets";
+const GITHUB_API = "https://api.github.com";
+const REPO_NAME = "SonaMother/crypto-paper-trader";
+const WORKFLOW_FILENAME = "update.yml";
 
 const REFRESH_INTERVAL_SECONDS = 60; // live price refresh interval
 let countdownSeconds = REFRESH_INTERVAL_SECONDS;
@@ -34,11 +39,16 @@ let portfolioChart = null;
 let cachedPortfolio = null;
 let cachedTrades = [];
 let cachedPriceHistory = [];
+let cachedActivityLog = [];
+let cachedRules = [];
 
 // Latest live prices (from CoinGecko, fetched every 60s)
 let livePrices = {};  // { token_id: { price, change_24h, market_cap, volume_24h } }
 let livePriceSource = "—";
 let livePriceSourceTime = null;
+
+// GitHub PAT (stored in localStorage, never committed)
+let ghToken = localStorage.getItem("gh_token") || "";
 
 // ============================================================================
 // Utilities
@@ -570,16 +580,20 @@ async function refreshAll() {
 
   try {
     // Fetch server-side data + live prices in parallel
-    const [portfolio, trades, priceHistory, live] = await Promise.all([
+    const [portfolio, trades, priceHistory, activityLog, rules, live] = await Promise.all([
       fetchJson(FILES.portfolio),
       fetchJson(FILES.trades),
       fetchJson(FILES.priceHistory),
+      fetchJson(FILES.activityLog).catch(() => []),
+      fetchJson(FILES.rules).catch(() => []),
       fetchLivePrices(),
     ]);
 
     cachedPortfolio = portfolio;
     cachedTrades = trades;
     cachedPriceHistory = priceHistory;
+    cachedActivityLog = activityLog;
+    cachedRules = rules;
     livePrices = live;
 
     const summary = computeSummary(portfolio, live);
@@ -589,6 +603,9 @@ async function refreshAll() {
     renderHoldings(summary);
     renderTrades(trades);
     renderChart(priceHistory);
+    renderSystemStatus(activityLog, rules);
+    renderActivityLog(activityLog);
+    renderRulesList(rules);
 
     countdownSeconds = REFRESH_INTERVAL_SECONDS;
   } catch (err) {
@@ -633,11 +650,181 @@ function startCountdown() {
 }
 
 // ============================================================================
+// System status, activity log, rules list renderers
+// ============================================================================
+
+function renderSystemStatus(activityLog, rules) {
+  // Cron status: derived from whether we have any "refresh" events
+  const lastRefresh = activityLog ? activityLog.find(e => e.action === "refresh" || e.action === "refresh_failed") : null;
+  const lastRefreshFailed = activityLog ? activityLog.find(e => e.action === "refresh_failed") : null;
+  const lastAiAction = activityLog ? activityLog.find(e => ["buy", "sell", "rule_triggered", "rule_added"].includes(e.action) && e.actor !== "cron" && e.actor !== "system") : null;
+  const enabledRules = rules ? rules.filter(r => r.enabled) : [];
+
+  // Cron status
+  const cronEl = document.getElementById("status-cron");
+  const cronDetailEl = document.getElementById("status-cron-detail");
+  if (lastRefresh) {
+    if (lastRefreshFailed && lastRefreshFailed.ts >= (lastRefresh.ts || "")) {
+      cronEl.textContent = "Degraded";
+      cronEl.className = "status-value text-down";
+      cronDetailEl.textContent = `Last run failed: ${fmtRelative(lastRefreshFailed.ts)}`;
+    } else {
+      cronEl.textContent = "Active";
+      cronEl.className = "status-value text-up";
+      cronDetailEl.textContent = `Last successful run: ${fmtRelative(lastRefresh.ts)}`;
+    }
+  } else {
+    cronEl.textContent = "Not activated";
+    cronEl.className = "status-value text-muted";
+    cronDetailEl.textContent = "See SETUP_WORKFLOW.md to activate";
+  }
+
+  // Last refresh
+  document.getElementById("status-last-refresh").textContent = lastRefresh ? fmtRelative(lastRefresh.ts) : "—";
+  document.getElementById("status-last-refresh-detail").textContent = lastRefresh ? (lastRefresh.details || "").slice(0, 80) : "No refreshes yet";
+
+  // Last AI action
+  document.getElementById("status-last-ai").textContent = lastAiAction ? `${lastAiAction.actor}` : "—";
+  document.getElementById("status-last-ai-detail").textContent = lastAiAction ? `${lastAiAction.action} · ${fmtRelative(lastAiAction.ts)}` : "No AI actions yet";
+
+  // Active rules
+  document.getElementById("status-rules").textContent = enabledRules.length;
+  document.getElementById("status-rules-detail").textContent = `${rules ? rules.length : 0} total (incl. disabled)`;
+}
+
+function renderActivityLog(activityLog) {
+  const tbody = document.getElementById("activity-table");
+  const countEl = document.getElementById("activity-count");
+  if (!activityLog || activityLog.length === 0) {
+    countEl.textContent = "0 events";
+    tbody.innerHTML = `<tr><td colspan="4" class="table-empty">No activity yet.</td></tr>`;
+    return;
+  }
+  // activityLog is stored oldest-last, but we want newest-first on display
+  const sorted = [...activityLog].sort((a, b) => (b.epoch || 0) - (a.epoch || 0));
+  countEl.textContent = `${activityLog.length} event${activityLog.length === 1 ? "" : "s"}`;
+  tbody.innerHTML = sorted.slice(0, 50).map(e => {
+    const actorClass = `actor-pill actor-pill-${(e.actor || "system").replace(/[^a-zA-Z]/g, "")}`;
+    const actionClass = `action-pill action-pill-${e.action || ""}`;
+    return `
+      <tr>
+        <td style="color: var(--text-muted); font-size: 11px; white-space: nowrap;">${fmtTime(e.ts)}</td>
+        <td><span class="${actorClass}">${e.actor || "?"}</span></td>
+        <td><span class="${actionClass}">${e.action || "?"}</span></td>
+        <td style="color: var(--text-secondary); font-size: 12px;">${e.details || ""}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderRulesList(rules) {
+  const container = document.getElementById("rules-list");
+  const countEl = document.getElementById("rules-count");
+  if (!rules || rules.length === 0) {
+    countEl.textContent = "0 rules";
+    container.innerHTML = `<div class="loading">No rules configured.</div>`;
+    return;
+  }
+  countEl.textContent = `${rules.length} rule${rules.length === 1 ? "" : "s"}`;
+  container.innerHTML = rules.map(r => {
+    const enabledClass = r.enabled ? "" : "rule-row-disabled";
+    const typeClass = `rule-type-pill rule-type-${r.type}`;
+    const thresholdStr = r.threshold > 0 ? `+${r.threshold}%` : `${r.threshold}%`;
+    return `
+      <div class="rule-row ${enabledClass}">
+        <span class="${typeClass}">${r.type.replace("_", " ")}</span>
+        <span class="rule-token">${r.token_id === "all" ? "ALL" : r.token_id.toUpperCase()}</span>
+        <div>
+          <div class="rule-desc">${r.note || ""}</div>
+          <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">
+            by <span style="color: var(--text-secondary);">${r.created_by || "?"}</span> ·
+            <span class="rule-threshold">trigger at ${thresholdStr} P&L</span> ·
+            <span class="rule-threshold">action: ${r.action}</span>
+          </div>
+        </div>
+        <span class="pill ${r.enabled ? "pill-up" : "pill-neutral"}" style="font-size: 10px;">${r.enabled ? "ON" : "OFF"}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+// ============================================================================
+// Trigger refresh (uses GitHub API workflow_dispatch)
+// ============================================================================
+
+async function triggerCronRefresh() {
+  const btn = document.getElementById("force-refresh-btn");
+  const resultEl = document.getElementById("force-refresh-result");
+  if (!ghToken) {
+    resultEl.textContent = "Enter a GitHub PAT above first";
+    resultEl.className = "status-detail text-down";
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = "Triggering…";
+  resultEl.textContent = "";
+  try {
+    const url = `${GITHUB_API}/repos/${REPO_NAME}/actions/workflows/${WORKFLOW_FILENAME}/dispatches`;
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": `token ${ghToken}`,
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      body: JSON.stringify({ ref: "main" }),
+    });
+    if (resp.status === 204) {
+      resultEl.textContent = "✓ Triggered. Refresh will run in ~30s.";
+      resultEl.className = "status-detail text-up";
+      // Auto-refresh dashboard after 60s to see new data
+      setTimeout(() => refreshAll(), 60000);
+    } else if (resp.status === 404) {
+      resultEl.textContent = "Workflow file not found — see SETUP_WORKFLOW.md";
+      resultEl.className = "status-detail text-down";
+    } else if (resp.status === 401 || resp.status === 403) {
+      resultEl.textContent = "Token lacks 'workflow' scope";
+      resultEl.className = "status-detail text-down";
+    } else {
+      const text = await resp.text();
+      resultEl.textContent = `Error ${resp.status}: ${text.slice(0, 100)}`;
+      resultEl.className = "status-detail text-down";
+    }
+  } catch (err) {
+    resultEl.textContent = `Failed: ${err.message}`;
+    resultEl.className = "status-detail text-down";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Trigger cron";
+  }
+}
+
+// ============================================================================
 // Init
 // ============================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("refresh-btn").addEventListener("click", refreshAll);
+  document.getElementById("force-refresh-btn").addEventListener("click", triggerCronRefresh);
+
+  // Restore saved GitHub token to input
+  const tokenInput = document.getElementById("gh-token-input");
+  if (tokenInput && ghToken) {
+    tokenInput.value = ghToken;
+  }
+  document.getElementById("save-token-btn").addEventListener("click", () => {
+    const val = document.getElementById("gh-token-input").value.trim();
+    if (val) {
+      localStorage.setItem("gh_token", val);
+      ghToken = val;
+      document.getElementById("save-token-btn").textContent = "Saved ✓";
+      setTimeout(() => { document.getElementById("save-token-btn").textContent = "Save"; }, 1500);
+    } else {
+      localStorage.removeItem("gh_token");
+      ghToken = "";
+    }
+  });
+
   const repoLink = document.getElementById("repo-link");
   if (repoLink) {
     const pathParts = window.location.pathname.split("/").filter(Boolean);

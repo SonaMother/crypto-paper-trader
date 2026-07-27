@@ -1,5 +1,6 @@
 """
-Refresh all token prices and update the portfolio's mark-to-market value.
+Refresh all token prices, update the portfolio, evaluate trading rules,
+and log the event to the activity log.
 
 This is the script that GitHub Actions runs every hour.
 Safe to run anytime locally as well.
@@ -15,6 +16,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fetch_prices import fetch_all_token_prices
 from portfolio import update_prices, compute_summary
+from rules_engine import evaluate_rules
+from activity_log import log_event
 from utils import fmt_usd, fmt_pct
 
 
@@ -37,11 +40,22 @@ def main():
     if fetched_count == 0:
         print("\n[warn] No prices could be fetched (likely rate-limited).")
         print("[warn] Portfolio not updated this run.")
-        print("[warn] The dashboard will still show cached prices from the last successful update.")
+        print("[warn] The dashboard will still show cached prices + live browser-side prices.")
+        log_event("cron", "refresh_failed", f"Refresh failed: 0/{fetched_count + failed_count} prices fetched",
+                  {"fetched": 0, "total": fetched_count + failed_count})
         return
 
     print("\nUpdating portfolio...")
     update_prices(prices)
+
+    print("\nEvaluating trading rules...")
+    triggered = evaluate_rules(prices)
+    if triggered:
+        print(f"  {len(triggered)} rule(s) triggered:")
+        for t in triggered:
+            print(f"    - {t['rule_id']}: {t['rule_type']} on {t['ticker']} at {t['pnl_pct_at_trigger']:+.2f}% → {t['action']}")
+    else:
+        print("  No rules triggered.")
 
     s = compute_summary()
     print("\nPortfolio summary:")
@@ -52,6 +66,13 @@ def main():
     print("\nPer-AI breakdown:")
     for ai in s.get('per_ai', []):
         print(f"  {ai['ai']}: {ai['num_tokens']} tokens, P&L = {fmt_usd(ai['pnl_usd'])} ({fmt_pct(ai['pnl_pct'])})")
+
+    # Log the refresh event
+    log_event("cron", "refresh",
+              f"Hourly refresh: {fetched_count}/{fetched_count + failed_count} prices fetched, {len(triggered)} rule(s) triggered. P&L: {fmt_usd(s['total_pnl_usd'])} ({fmt_pct(s['total_pnl_pct'])})",
+              {"fetched": fetched_count, "total": fetched_count + failed_count, "rules_triggered": len(triggered),
+               "portfolio_value": s['total_value_usd'], "pnl_pct": s['total_pnl_pct']})
+
     print("\n✓ Done.")
 
 

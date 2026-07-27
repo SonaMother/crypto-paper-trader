@@ -1,0 +1,24 @@
+[
+  {
+    "ts": "2026-07-27T05:17:51Z",
+    "epoch": 1785129471,
+    "actor": "system",
+    "action": "test",
+    "details": "Activity log initialized",
+    "data": {}
+  },
+  {
+    "ts": "2026-07-27T05:19:00Z",
+    "epoch": 1785129540,
+    "actor": "cron",
+    "action": "refresh",
+    "details": "Hourly refresh: 6/6 prices fetched, 0 rule(s) triggered. P&L: $-0.37 (-6.09%)",
+    "data": {
+      "fetched": 6,
+      "total": 6,
+      "rules_triggered": 0,
+      "portfolio_value": 5.634442963579334,
+      "pnl_pct": -6.092617273677773
+    }
+  }
+]

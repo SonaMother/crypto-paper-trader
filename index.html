@@ -67,6 +67,13 @@
                 <span class="hero-stat-label">Price source</span>
                 <span id="hero-source" class="hero-stat-value">—</span>
               </div>
+              <div class="hero-stat hero-stat-token">
+                <span class="hero-stat-label">API token (for trigger button)</span>
+                <div class="token-input-row">
+                  <input id="gh-token-input" type="password" placeholder="GitHub PAT (optional)" class="token-input" />
+                  <button id="save-token-btn" class="btn btn-secondary btn-xs">Save</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -76,6 +83,41 @@
           <p class="label">AI Leaderboard</p>
           <div id="ai-leaderboard" class="ai-leaderboard">
             <div class="ai-leaderboard-row">Loading…</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- System status strip -->
+    <section class="section">
+      <div class="card card-status">
+        <div class="status-grid">
+          <div class="status-cell">
+            <div class="status-label">Cron status</div>
+            <div id="status-cron" class="status-value">—</div>
+            <div id="status-cron-detail" class="status-detail">—</div>
+          </div>
+          <div class="status-cell">
+            <div class="status-label">Last refresh</div>
+            <div id="status-last-refresh" class="status-value">—</div>
+            <div id="status-last-refresh-detail" class="status-detail">—</div>
+          </div>
+          <div class="status-cell">
+            <div class="status-label">Last AI action</div>
+            <div id="status-last-ai" class="status-value">—</div>
+            <div id="status-last-ai-detail" class="status-detail">—</div>
+          </div>
+          <div class="status-cell">
+            <div class="status-label">Active rules</div>
+            <div id="status-rules" class="status-value">—</div>
+            <div id="status-rules-detail" class="status-detail">—</div>
+          </div>
+          <div class="status-cell status-cell-action">
+            <div class="status-label">Force refresh</div>
+            <button id="force-refresh-btn" class="btn btn-primary" title="Triggers the GitHub Actions workflow to refresh prices now">
+              Trigger cron
+            </button>
+            <div id="force-refresh-result" class="status-detail"></div>
           </div>
         </div>
       </div>
@@ -152,6 +194,50 @@
               <tr><td colspan="8" class="table-empty">Loading trades…</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Activity log -->
+    <section class="section">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Activity Log</h2>
+            <p class="card-subtitle">Live feed of cron refreshes, AI trades, rule triggers, and system events.</p>
+          </div>
+          <span id="activity-count" class="pill pill-neutral">0 events</span>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Time (UTC)</th>
+                <th>Actor</th>
+                <th>Action</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="activity-table">
+              <tr><td colspan="4" class="table-empty">Loading activity…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Active rules -->
+    <section class="section">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Active Trading Rules</h2>
+            <p class="card-subtitle">Automated paper-trading rules evaluated on every refresh.</p>
+          </div>
+          <span id="rules-count" class="pill pill-neutral">0 rules</span>
+        </div>
+        <div id="rules-list" class="rules-list">
+          <div class="loading">Loading rules…</div>
         </div>
       </div>
     </section>
