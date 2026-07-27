@@ -3,15 +3,22 @@ name: Update Portfolio
 on:
   schedule:
     # Run every 15 minutes (4x/hour for responsive updates)
+    # GitHub Actions free tier: 2000 min/month. Each run = ~30s.
+    # 4 runs/hour * 24 * 30 = 2880 runs/month * 0.5 min = 1440 min. Under limit.
     - cron: '5,20,35,50 * * * *'
-  workflow_dispatch: {}
+  workflow_dispatch: {}   # Allow manual trigger from the Actions tab or API
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - 'data/rules.json'
 
 permissions:
-  contents: write
+  contents: write          # Required so the bot can commit and push updates
 
 concurrency:
   group: portfolio-update
-  cancel-in-progress: false
+  cancel-in-progress: false   # Don't cancel mid-run; could corrupt data files
 
 jobs:
   update:
@@ -20,6 +27,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Use the auto-provided GITHUB_TOKEN so we can push back
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -33,12 +43,15 @@ jobs:
 
       - name: Update portfolio
         id: update
+        continue-on-error: true   # Don't fail the whole workflow if prices are unavailable
         run: |
           python scripts/update_portfolio.py 2>&1 | tee update.log
-          PNL=$(grep "P&L" update.log | head -1 | sed 's/.*P&L *: *//' || echo "unknown")
+          # Extract P&L for commit message
+          PNL=$(grep "P&L" update.log | head -1 | sed 's/.*P&L *: *//' || echo "no-prices")
           echo "pnl_summary=$PNL" >> $GITHUB_OUTPUT
 
       - name: Commit and push
+        continue-on-error: true
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -49,3 +62,14 @@ jobs:
             git commit -m "chore(data): portfolio update $(date -u +'%Y-%m-%dT%H:%M:%SZ') — ${{ steps.update.outputs.pnl_summary }}"
             git push
           fi
+
+      - name: Run health check (informational)
+        if: always()
+        run: |
+          python scripts/health_check.py --json || true
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::warning::Portfolio update failed. The dashboard will still show live browser-side prices."
+          echo "::warning::Check the logs at https://github.com/SonaMother/crypto-paper-trader/actions"
