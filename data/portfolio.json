@@ -10,8 +10,8 @@
       "color": "#f59e0b",
       "amount": 64.08781569,
       "cost_basis_usd": 1.0,
-      "last_price": 0.0108733,
-      "last_price_updated_at": "2026-08-01T21:29:03Z",
+      "last_price": 0.01144163,
+      "last_price_updated_at": "2026-08-01T22:27:39Z",
       "recommended_by": "zAI"
     },
     "cashcat": {
@@ -22,8 +22,8 @@
       "color": "#3b82f6",
       "amount": 19.7141449,
       "cost_basis_usd": 1.0,
-      "last_price": 0.03968509,
-      "last_price_updated_at": "2026-08-01T21:29:03Z",
+      "last_price": 0.03946088,
+      "last_price_updated_at": "2026-08-01T22:27:39Z",
       "recommended_by": "zAI"
     },
     "fox": {
@@ -34,8 +34,8 @@
       "color": "#10b981",
       "amount": 1091.80469385,
       "cost_basis_usd": 1.1,
-      "last_price": 0.00037422,
-      "last_price_updated_at": "2026-08-01T21:29:03Z",
+      "last_price": 0.00037839,
+      "last_price_updated_at": "2026-08-01T22:27:39Z",
       "recommended_by": "zAI"
     },
     "pump": {
@@ -46,8 +46,8 @@
       "color": "#8b5cf6",
       "amount": 533.07745615,
       "cost_basis_usd": 1.0,
-      "last_price": 0.00211368,
-      "last_price_updated_at": "2026-08-01T21:29:03Z",
+      "last_price": 0.00212018,
+      "last_price_updated_at": "2026-08-01T22:27:39Z",
       "recommended_by": "zAI"
     },
     "lista": {
@@ -59,8 +59,8 @@
       "recommended_by": "gAi",
       "amount": 21.10532825,
       "cost_basis_usd": 1.0,
-      "last_price": 0.054781,
-      "last_price_updated_at": "2026-08-01T21:29:03Z"
+      "last_price": 0.054398,
+      "last_price_updated_at": "2026-08-01T22:27:39Z"
     },
     "xvs": {
       "token_id": "xvs",
@@ -71,9 +71,9 @@
       "recommended_by": "gAi",
       "amount": 0.34013605,
       "cost_basis_usd": 1.0,
-      "last_price": 2.73,
-      "last_price_updated_at": "2026-08-01T21:29:03Z"
+      "last_price": 2.74,
+      "last_price_updated_at": "2026-08-01T22:27:39Z"
     }
   },
-  "last_updated_at": "2026-08-01T21:29:03Z"
+  "last_updated_at": "2026-08-01T22:27:39Z"
 }
