@@ -96,5 +96,33 @@
     "price_usd": 0.00080015,
     "value_usd": 0.1,
     "note": "Test remote API buy"
+  },
+  {
+    "id": "aeb8dfca-70c3-4081-8654-65e1543a2777",
+    "ts": "2026-08-05T20:15:25Z",
+    "epoch": 1785960925,
+    "action": "SELL",
+    "token_id": "cashcat",
+    "ticker": "CASHCAT",
+    "chain": "Robinhood",
+    "recommended_by": "zAI",
+    "amount": 9.85707245,
+    "price_usd": 0.10271,
+    "value_usd": 1.01242,
+    "note": "Auto: rule 'tp-zai-basket-2x' triggered (take_profit @ +102.48% \u2192 sell_50pct)"
+  },
+  {
+    "id": "8c68eb90-06fb-459b-8e14-3d9695093bf3",
+    "ts": "2026-08-05T20:15:25Z",
+    "epoch": 1785960925,
+    "action": "SELL",
+    "token_id": "cashcat",
+    "ticker": "CASHCAT",
+    "chain": "Robinhood",
+    "recommended_by": "zAI",
+    "amount": 9.85707245,
+    "price_usd": 0.10271,
+    "value_usd": 1.01242,
+    "note": "Auto: rule 'tp-gai-basket-2x' triggered (take_profit @ +102.48% \u2192 sell_50pct)"
   }
 ]
