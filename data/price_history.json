@@ -3770,5 +3770,18 @@
       "xvs": 2.7
     },
     "portfolio_value_usd": 7.556366
+  },
+  {
+    "ts": "2026-08-12T16:00:59Z",
+    "epoch": 1786550459,
+    "prices": {
+      "tendies": 0.01838129,
+      "cashcat": 0.149155,
+      "fox": 0.00057439,
+      "pump": 0.00276676,
+      "lista": 0.064529,
+      "xvs": 2.7
+    },
+    "portfolio_value_usd": 7.585149
   }
 ]
