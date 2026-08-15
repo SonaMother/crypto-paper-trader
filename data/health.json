@@ -1,20 +1,20 @@
 {
-  "timestamp": "2026-08-15T21:47:18Z",
+  "timestamp": "2026-08-15T21:59:18Z",
   "overall_status": "healthy",
   "fetched_prices": 6,
   "total_prices": 6,
   "rules_triggered": 0,
-  "portfolio_value_usd": 7.524357906381394,
-  "portfolio_pnl_usd": 2.4243579063813945,
-  "portfolio_pnl_pct": 47.53642953689009,
+  "portfolio_value_usd": 7.519264728478311,
+  "portfolio_pnl_usd": 2.4192647284783115,
+  "portfolio_pnl_pct": 47.43656330349631,
   "per_ai": [
     {
       "ai": "zAI",
       "num_tokens": 4,
       "cost_basis_usd": 3.1,
-      "current_value_usd": 3.374119,
-      "pnl_usd": 0.274119,
-      "pnl_pct": 8.842548387096775,
+      "current_value_usd": 3.374031,
+      "pnl_usd": 0.274031,
+      "pnl_pct": 8.839709677419355,
       "tokens": [
         "tendies",
         "cashcat",
@@ -26,9 +26,9 @@
       "ai": "gAi",
       "num_tokens": 2,
       "cost_basis_usd": 2.0,
-      "current_value_usd": 2.125399,
-      "pnl_usd": 0.125399,
-      "pnl_pct": 6.269950000000001,
+      "current_value_usd": 2.120393,
+      "pnl_usd": 0.120393,
+      "pnl_pct": 6.01965,
       "tokens": [
         "lista",
         "xvs"
