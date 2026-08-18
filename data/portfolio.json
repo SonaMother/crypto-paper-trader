@@ -10,8 +10,8 @@
       "color": "#f59e0b",
       "amount": 64.08781569,
       "cost_basis_usd": 1.0,
-      "last_price": 0.00957062,
-      "last_price_updated_at": "2026-08-18T04:53:19Z",
+      "last_price": 0.00974758,
+      "last_price_updated_at": "2026-08-18T05:32:42Z",
       "recommended_by": "zAI"
     },
     "cashcat": {
@@ -22,8 +22,8 @@
       "color": "#3b82f6",
       "amount": 0.0,
       "cost_basis_usd": 0.0,
-      "last_price": 0.10534,
-      "last_price_updated_at": "2026-08-18T04:53:19Z",
+      "last_price": 0.104832,
+      "last_price_updated_at": "2026-08-18T05:32:42Z",
       "recommended_by": "zAI"
     },
     "fox": {
@@ -34,8 +34,8 @@
       "color": "#10b981",
       "amount": 1091.80469385,
       "cost_basis_usd": 1.1,
-      "last_price": 0.00150268,
-      "last_price_updated_at": "2026-08-18T04:53:19Z",
+      "last_price": 0.00160371,
+      "last_price_updated_at": "2026-08-18T05:32:42Z",
       "recommended_by": "zAI"
     },
     "pump": {
@@ -46,8 +46,8 @@
       "color": "#8b5cf6",
       "amount": 533.07745615,
       "cost_basis_usd": 1.0,
-      "last_price": 0.00278545,
-      "last_price_updated_at": "2026-08-18T04:53:19Z",
+      "last_price": 0.00278806,
+      "last_price_updated_at": "2026-08-18T05:32:42Z",
       "recommended_by": "zAI"
     },
     "lista": {
@@ -59,8 +59,8 @@
       "recommended_by": "gAi",
       "amount": 21.10532825,
       "cost_basis_usd": 1.0,
-      "last_price": 0.059875,
-      "last_price_updated_at": "2026-08-18T04:53:19Z"
+      "last_price": 0.059672,
+      "last_price_updated_at": "2026-08-18T05:32:42Z"
     },
     "xvs": {
       "token_id": "xvs",
@@ -71,9 +71,9 @@
       "recommended_by": "gAi",
       "amount": 0.34013605,
       "cost_basis_usd": 1.0,
-      "last_price": 2.68,
-      "last_price_updated_at": "2026-08-18T04:53:19Z"
+      "last_price": 2.69,
+      "last_price_updated_at": "2026-08-18T05:32:42Z"
     }
   },
-  "last_updated_at": "2026-08-18T04:53:19Z"
+  "last_updated_at": "2026-08-18T05:32:42Z"
 }
