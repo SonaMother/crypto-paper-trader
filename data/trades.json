@@ -208,5 +208,33 @@
     "price_usd": 0.0037745,
     "value_usd": 0.503025,
     "note": "Auto: rule 'tp-gai-basket-2x' triggered (take_profit @ +101.21% \u2192 sell_50pct)"
+  },
+  {
+    "id": "0185dffc-9b5a-4429-8966-824021f37b9b",
+    "ts": "2026-08-20T22:56:33Z",
+    "epoch": 1787266593,
+    "action": "SELL",
+    "token_id": "pump",
+    "ticker": "PUMP",
+    "chain": "Solana",
+    "recommended_by": "zAI",
+    "amount": 66.634682015,
+    "price_usd": 0.00376573,
+    "value_usd": 0.250928,
+    "note": "Auto: rule 'tp-zai-basket-2x' triggered (take_profit @ +100.74% \u2192 sell_50pct)"
+  },
+  {
+    "id": "7fd35702-697e-476e-9900-9e7b78fa1ce0",
+    "ts": "2026-08-20T22:56:33Z",
+    "epoch": 1787266593,
+    "action": "SELL",
+    "token_id": "pump",
+    "ticker": "PUMP",
+    "chain": "Solana",
+    "recommended_by": "zAI",
+    "amount": 66.634682015,
+    "price_usd": 0.00376573,
+    "value_usd": 0.250928,
+    "note": "Auto: rule 'tp-gai-basket-2x' triggered (take_profit @ +100.74% \u2192 sell_50pct)"
   }
 ]
