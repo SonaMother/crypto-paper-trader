@@ -10535,5 +10535,19 @@
       "portfolio_value": 9.577558410130104,
       "pnl_pct": 169.7903777501438
     }
+  },
+  {
+    "ts": "2026-08-23T23:47:32Z",
+    "epoch": 1787528852,
+    "actor": "cron",
+    "action": "refresh",
+    "details": "Hourly refresh: 6/6 prices fetched, 0 rule(s) triggered. P&L: $6.20 (+174.70%)",
+    "data": {
+      "fetched": 6,
+      "total": 6,
+      "rules_triggered": 0,
+      "portfolio_value": 9.751976193839688,
+      "pnl_pct": 174.70355475604757
+    }
   }
 ]
