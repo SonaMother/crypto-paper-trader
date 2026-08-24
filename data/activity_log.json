@@ -10787,5 +10787,57 @@
       "portfolio_value": 9.73505669434789,
       "pnl_pct": 174.2269491365603
     }
+  },
+  {
+    "ts": "2026-08-24T14:52:43Z",
+    "epoch": 1787583163,
+    "actor": "zAI",
+    "action": "rule_triggered",
+    "details": "Rule 'tp-zai-basket-2x' triggered: take_profit on FOX at +102.16% P&L \u2192 sell_50pct",
+    "data": {
+      "rule_id": "tp-zai-basket-2x",
+      "rule_type": "take_profit",
+      "token_id": "fox",
+      "ticker": "FOX",
+      "pnl_pct_at_trigger": 102.16451240974442,
+      "threshold": 100,
+      "action": "sell_50pct",
+      "trade_id": "5bb42082-6d17-4593-9260-5bad0451b82a",
+      "amount_sold": 272.95117346,
+      "price_usd": 0.00203682
+    }
+  },
+  {
+    "ts": "2026-08-24T14:52:43Z",
+    "epoch": 1787583163,
+    "actor": "gAi",
+    "action": "rule_triggered",
+    "details": "Rule 'tp-gai-basket-2x' triggered: take_profit on FOX at +102.16% P&L \u2192 sell_50pct",
+    "data": {
+      "rule_id": "tp-gai-basket-2x",
+      "rule_type": "take_profit",
+      "token_id": "fox",
+      "ticker": "FOX",
+      "pnl_pct_at_trigger": 102.16451240974442,
+      "threshold": 100,
+      "action": "sell_50pct",
+      "trade_id": "1e14a547-cf29-47fc-9fb0-5e2fdaa8d3f5",
+      "amount_sold": 272.95117346,
+      "price_usd": 0.00203682
+    }
+  },
+  {
+    "ts": "2026-08-24T14:52:43Z",
+    "epoch": 1787583163,
+    "actor": "cron",
+    "action": "refresh",
+    "details": "Hourly refresh: 6/6 prices fetched, 2 rule(s) triggered. P&L: $7.00 (+233.36%)",
+    "data": {
+      "fetched": 6,
+      "total": 6,
+      "rules_triggered": 2,
+      "portfolio_value": 10.000721620449875,
+      "pnl_pct": 233.35738734832918
+    }
   }
 ]

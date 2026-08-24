@@ -264,5 +264,33 @@
     "price_usd": 0.00388718,
     "value_usd": 0.129511,
     "note": "Auto: rule 'tp-gai-basket-2x' triggered (take_profit @ +107.22% \u2192 sell_50pct)"
+  },
+  {
+    "id": "5bb42082-6d17-4593-9260-5bad0451b82a",
+    "ts": "2026-08-24T14:52:43Z",
+    "epoch": 1787583163,
+    "action": "SELL",
+    "token_id": "fox",
+    "ticker": "FOX",
+    "chain": "Robinhood",
+    "recommended_by": "zAI",
+    "amount": 272.95117346,
+    "price_usd": 0.00203682,
+    "value_usd": 0.555952,
+    "note": "Auto: rule 'tp-zai-basket-2x' triggered (take_profit @ +102.16% \u2192 sell_50pct)"
+  },
+  {
+    "id": "1e14a547-cf29-47fc-9fb0-5e2fdaa8d3f5",
+    "ts": "2026-08-24T14:52:43Z",
+    "epoch": 1787583163,
+    "action": "SELL",
+    "token_id": "fox",
+    "ticker": "FOX",
+    "chain": "Robinhood",
+    "recommended_by": "zAI",
+    "amount": 272.95117346,
+    "price_usd": 0.00203682,
+    "value_usd": 0.555952,
+    "note": "Auto: rule 'tp-gai-basket-2x' triggered (take_profit @ +102.16% \u2192 sell_50pct)"
   }
 ]
