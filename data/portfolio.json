@@ -1,6 +1,6 @@
 {
   "created_at": "2026-07-26T16:46:10Z",
-  "cash_usd": 7.318187,
+  "cash_usd": 8.446187,
   "holdings": {
     "tendies": {
       "token_id": "tendies",
@@ -8,10 +8,10 @@
       "name": "TENDIES",
       "chain": "Robinhood",
       "color": "#f59e0b",
-      "amount": 32.04390784,
-      "cost_basis_usd": 0.5,
-      "last_price": 0.03195798,
-      "last_price_updated_at": "2026-09-02T18:30:06Z",
+      "amount": 0.0,
+      "cost_basis_usd": 0.0,
+      "last_price": 0.03520168,
+      "last_price_updated_at": "2026-09-02T21:12:15Z",
       "recommended_by": "zAI"
     },
     "cashcat": {
@@ -22,8 +22,8 @@
       "color": "#3b82f6",
       "amount": 0.0,
       "cost_basis_usd": 0.0,
-      "last_price": 0.248997,
-      "last_price_updated_at": "2026-09-02T18:30:06Z",
+      "last_price": 0.274459,
+      "last_price_updated_at": "2026-09-02T21:12:15Z",
       "recommended_by": "zAI"
     },
     "fox": {
@@ -34,8 +34,8 @@
       "color": "#10b981",
       "amount": 0.0,
       "cost_basis_usd": 0.0,
-      "last_price": 0.00149281,
-      "last_price_updated_at": "2026-09-02T18:30:06Z",
+      "last_price": 0.00141808,
+      "last_price_updated_at": "2026-09-02T21:12:15Z",
       "recommended_by": "zAI"
     },
     "pump": {
@@ -46,8 +46,8 @@
       "color": "#8b5cf6",
       "amount": 0.0,
       "cost_basis_usd": 0.0,
-      "last_price": 0.0041216,
-      "last_price_updated_at": "2026-09-02T18:30:06Z",
+      "last_price": 0.00408207,
+      "last_price_updated_at": "2026-09-02T21:12:15Z",
       "recommended_by": "zAI"
     },
     "lista": {
@@ -59,8 +59,8 @@
       "recommended_by": "gAi",
       "amount": 21.10532825,
       "cost_basis_usd": 1.0,
-      "last_price": 0.06715,
-      "last_price_updated_at": "2026-09-02T18:30:06Z"
+      "last_price": 0.068058,
+      "last_price_updated_at": "2026-09-02T21:12:15Z"
     },
     "xvs": {
       "token_id": "xvs",
@@ -71,9 +71,9 @@
       "recommended_by": "gAi",
       "amount": 0.34013605,
       "cost_basis_usd": 1.0,
-      "last_price": 3.03,
-      "last_price_updated_at": "2026-09-02T18:30:06Z"
+      "last_price": 3.02,
+      "last_price_updated_at": "2026-09-02T21:12:15Z"
     }
   },
-  "last_updated_at": "2026-09-02T18:30:06Z"
+  "last_updated_at": "2026-09-02T21:12:15Z"
 }

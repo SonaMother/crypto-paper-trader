@@ -320,5 +320,33 @@
     "price_usd": 0.03195798,
     "value_usd": 1.024059,
     "note": "Auto: rule 'tp-gai-basket-2x' triggered (take_profit @ +104.81% \u2192 sell_50pct)"
+  },
+  {
+    "id": "9ab44365-daa3-46a7-ab4d-a2b630b7a8b4",
+    "ts": "2026-09-02T21:12:15Z",
+    "epoch": 1788383535,
+    "action": "SELL",
+    "token_id": "tendies",
+    "ticker": "TENDIES",
+    "chain": "Robinhood",
+    "recommended_by": "zAI",
+    "amount": 16.02195392,
+    "price_usd": 0.03520168,
+    "value_usd": 0.564,
+    "note": "Auto: rule 'tp-zai-basket-2x' triggered (take_profit @ +125.60% \u2192 sell_50pct)"
+  },
+  {
+    "id": "7b55dd9b-f633-4817-a11c-d0bd40055be1",
+    "ts": "2026-09-02T21:12:15Z",
+    "epoch": 1788383535,
+    "action": "SELL",
+    "token_id": "tendies",
+    "ticker": "TENDIES",
+    "chain": "Robinhood",
+    "recommended_by": "zAI",
+    "amount": 16.02195392,
+    "price_usd": 0.03520168,
+    "value_usd": 0.564,
+    "note": "Auto: rule 'tp-gai-basket-2x' triggered (take_profit @ +125.60% \u2192 sell_50pct)"
   }
 ]

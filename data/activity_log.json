@@ -12409,5 +12409,57 @@
       "portfolio_value": 10.790080589360063,
       "pnl_pct": 331.6032235744025
     }
+  },
+  {
+    "ts": "2026-09-02T21:12:15Z",
+    "epoch": 1788383535,
+    "actor": "zAI",
+    "action": "rule_triggered",
+    "details": "Rule 'tp-zai-basket-2x' triggered: take_profit on TENDIES at +125.60% P&L \u2192 sell_50pct",
+    "data": {
+      "rule_id": "tp-zai-basket-2x",
+      "rule_type": "take_profit",
+      "token_id": "tendies",
+      "ticker": "TENDIES",
+      "pnl_pct_at_trigger": 125.59987794663425,
+      "threshold": 100,
+      "action": "sell_50pct",
+      "trade_id": "9ab44365-daa3-46a7-ab4d-a2b630b7a8b4",
+      "amount_sold": 16.02195392,
+      "price_usd": 0.03520168
+    }
+  },
+  {
+    "ts": "2026-09-02T21:12:15Z",
+    "epoch": 1788383535,
+    "actor": "gAi",
+    "action": "rule_triggered",
+    "details": "Rule 'tp-gai-basket-2x' triggered: take_profit on TENDIES at +125.60% P&L \u2192 sell_50pct",
+    "data": {
+      "rule_id": "tp-gai-basket-2x",
+      "rule_type": "take_profit",
+      "token_id": "tendies",
+      "ticker": "TENDIES",
+      "pnl_pct_at_trigger": 125.59987794663425,
+      "threshold": 100,
+      "action": "sell_50pct",
+      "trade_id": "7b55dd9b-f633-4817-a11c-d0bd40055be1",
+      "amount_sold": 16.02195392,
+      "price_usd": 0.03520168
+    }
+  },
+  {
+    "ts": "2026-09-02T21:12:15Z",
+    "epoch": 1788383535,
+    "actor": "cron",
+    "action": "refresh",
+    "details": "Hourly refresh: 6/6 prices fetched, 2 rule(s) triggered. P&L: $8.91 (+445.49%)",
+    "data": {
+      "fetched": 6,
+      "total": 6,
+      "rules_triggered": 2,
+      "portfolio_value": 10.9097843010385,
+      "pnl_pct": 445.48921505192493
+    }
   }
 ]
