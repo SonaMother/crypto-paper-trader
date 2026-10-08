@@ -1,19 +1,5 @@
 [
   {
-    "ts": "2026-08-03T21:13:40Z",
-    "epoch": 1785791620,
-    "actor": "cron",
-    "action": "refresh",
-    "details": "Hourly refresh: 6/6 prices fetched, 0 rule(s) triggered. P&L: $-0.13 (-2.11%)",
-    "data": {
-      "fetched": 6,
-      "total": 6,
-      "rules_triggered": 0,
-      "portfolio_value": 5.970987511534203,
-      "pnl_pct": -2.1149588273081483
-    }
-  },
-  {
     "ts": "2026-08-03T22:18:29Z",
     "epoch": 1785795509,
     "actor": "cron",
@@ -14047,6 +14033,20 @@
       "rules_triggered": 0,
       "portfolio_value": 11.04524170039875,
       "pnl_pct": 452.2620850199375
+    }
+  },
+  {
+    "ts": "2026-10-08T22:19:06Z",
+    "epoch": 1791497946,
+    "actor": "cron",
+    "action": "refresh",
+    "details": "Hourly refresh: 6/6 prices fetched, 0 rule(s) triggered. P&L: $9.10 (+455.09%)",
+    "data": {
+      "fetched": 6,
+      "total": 6,
+      "rules_triggered": 0,
+      "portfolio_value": 11.10175767738275,
+      "pnl_pct": 455.0878838691375
     }
   }
 ]
