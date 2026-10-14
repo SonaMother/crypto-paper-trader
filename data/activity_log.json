@@ -2,25 +2,6 @@
   {
     "ts": "2026-08-05T20:15:25Z",
     "epoch": 1785960925,
-    "actor": "gAi",
-    "action": "rule_triggered",
-    "details": "Rule 'tp-gai-basket-2x' triggered: take_profit on CASHCAT at +102.48% P&L \u2192 sell_50pct",
-    "data": {
-      "rule_id": "tp-gai-basket-2x",
-      "rule_type": "take_profit",
-      "token_id": "cashcat",
-      "ticker": "CASHCAT",
-      "pnl_pct_at_trigger": 102.4839822679,
-      "threshold": 100,
-      "action": "sell_50pct",
-      "trade_id": "8c68eb90-06fb-459b-8e14-3d9695093bf3",
-      "amount_sold": 9.85707245,
-      "price_usd": 0.10271
-    }
-  },
-  {
-    "ts": "2026-08-05T20:15:25Z",
-    "epoch": 1785960925,
     "actor": "cron",
     "action": "refresh",
     "details": "Hourly refresh: 6/6 prices fetched, 2 rule(s) triggered. P&L: $2.09 (+40.93%)",
@@ -14042,6 +14023,20 @@
       "rules_triggered": 0,
       "portfolio_value": 11.125152589039,
       "pnl_pct": 456.25762945195004
+    }
+  },
+  {
+    "ts": "2026-10-14T11:27:34Z",
+    "epoch": 1791977254,
+    "actor": "cron",
+    "action": "refresh",
+    "details": "Hourly refresh: 6/6 prices fetched, 0 rule(s) triggered. P&L: $9.13 (+456.67%)",
+    "data": {
+      "fetched": 6,
+      "total": 6,
+      "rules_triggered": 0,
+      "portfolio_value": 11.133450385693,
+      "pnl_pct": 456.67251928465
     }
   }
 ]
