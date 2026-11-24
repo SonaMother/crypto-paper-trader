@@ -1,47 +1,5 @@
 [
   {
-    "ts": "2026-08-14T16:26:46Z",
-    "epoch": 1786724806,
-    "actor": "cron",
-    "action": "refresh",
-    "details": "Hourly refresh: 6/6 prices fetched, 0 rule(s) triggered. P&L: $2.59 (+50.77%)",
-    "data": {
-      "fetched": 6,
-      "total": 6,
-      "rules_triggered": 0,
-      "portfolio_value": 7.689309961734834,
-      "pnl_pct": 50.770783563428125
-    }
-  },
-  {
-    "ts": "2026-08-14T17:29:59Z",
-    "epoch": 1786728599,
-    "actor": "cron",
-    "action": "refresh",
-    "details": "Hourly refresh: 6/6 prices fetched, 0 rule(s) triggered. P&L: $2.47 (+48.37%)",
-    "data": {
-      "fetched": 6,
-      "total": 6,
-      "rules_triggered": 0,
-      "portfolio_value": 7.567086781797364,
-      "pnl_pct": 48.37425062347774
-    }
-  },
-  {
-    "ts": "2026-08-14T18:25:20Z",
-    "epoch": 1786731920,
-    "actor": "cron",
-    "action": "refresh",
-    "details": "Hourly refresh: 6/6 prices fetched, 0 rule(s) triggered. P&L: $2.50 (+48.96%)",
-    "data": {
-      "fetched": 6,
-      "total": 6,
-      "rules_triggered": 0,
-      "portfolio_value": 7.597182573787479,
-      "pnl_pct": 48.964364191911365
-    }
-  },
-  {
     "ts": "2026-08-14T19:29:36Z",
     "epoch": 1786735776,
     "actor": "cron",
@@ -14039,6 +13997,58 @@
       "rules_triggered": 1,
       "portfolio_value": 11.31514171121616,
       "pnl_pct": 654.342780747744
+    }
+  },
+  {
+    "ts": "2026-11-24T18:54:26Z",
+    "epoch": 1795546466,
+    "actor": "zAI",
+    "action": "rule_triggered",
+    "details": "Rule 'tp-zai-basket-2x' triggered: take_profit on LISTA at +137.73% P&L \u2192 sell_50pct",
+    "data": {
+      "rule_id": "tp-zai-basket-2x",
+      "rule_type": "take_profit",
+      "token_id": "lista",
+      "ticker": "LISTA",
+      "pnl_pct_at_trigger": 137.726196229712,
+      "threshold": 100,
+      "action": "sell_50pct",
+      "trade_id": "1cc6cf2c-878f-4ddd-a594-09b693425ee4",
+      "amount_sold": 5.27633206,
+      "price_usd": 0.112638
+    }
+  },
+  {
+    "ts": "2026-11-24T18:54:26Z",
+    "epoch": 1795546466,
+    "actor": "gAi",
+    "action": "rule_triggered",
+    "details": "Rule 'tp-gai-basket-2x' triggered: take_profit on LISTA at +137.73% P&L \u2192 sell_50pct",
+    "data": {
+      "rule_id": "tp-gai-basket-2x",
+      "rule_type": "take_profit",
+      "token_id": "lista",
+      "ticker": "LISTA",
+      "pnl_pct_at_trigger": 137.726196229712,
+      "threshold": 100,
+      "action": "sell_50pct",
+      "trade_id": "5e9d541e-07ff-4d03-b7b8-23b73ad71561",
+      "amount_sold": 5.27633206,
+      "price_usd": 0.112638
+    }
+  },
+  {
+    "ts": "2026-11-24T18:54:26Z",
+    "epoch": 1795546466,
+    "actor": "cron",
+    "action": "refresh",
+    "details": "Hourly refresh: 6/6 prices fetched, 2 rule(s) triggered. P&L: $10.45 (+1044.68%)",
+    "data": {
+      "fetched": 6,
+      "total": 6,
+      "rules_triggered": 2,
+      "portfolio_value": 11.446845473,
+      "pnl_pct": 1044.6845473
     }
   }
 ]
