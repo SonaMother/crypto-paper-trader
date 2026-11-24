@@ -348,5 +348,33 @@
     "price_usd": 0.03520168,
     "value_usd": 0.564,
     "note": "Auto: rule 'tp-gai-basket-2x' triggered (take_profit @ +125.60% \u2192 sell_50pct)"
+  },
+  {
+    "id": "fb91a48f-4e1f-4dc0-af75-0572db90354b",
+    "ts": "2026-11-24T07:06:26Z",
+    "epoch": 1795503986,
+    "action": "SELL",
+    "token_id": "lista",
+    "ticker": "LISTA",
+    "chain": "BSC",
+    "recommended_by": "gAi",
+    "amount": 10.552664125,
+    "price_usd": 0.098868,
+    "value_usd": 1.043321,
+    "note": "Auto: rule 'tp-zai-basket-2x' triggered (take_profit @ +108.66% \u2192 sell_50pct)"
+  },
+  {
+    "id": "85f6740e-e655-46c5-a700-aacafe582e7d",
+    "ts": "2026-11-24T07:06:26Z",
+    "epoch": 1795503986,
+    "action": "SELL",
+    "token_id": "lista",
+    "ticker": "LISTA",
+    "chain": "BSC",
+    "recommended_by": "gAi",
+    "amount": 10.552664125,
+    "price_usd": 0.098868,
+    "value_usd": 1.043321,
+    "note": "Auto: rule 'tp-gai-basket-2x' triggered (take_profit @ +108.66% \u2192 sell_50pct)"
   }
 ]

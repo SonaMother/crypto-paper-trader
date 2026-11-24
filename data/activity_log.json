@@ -1,47 +1,5 @@
 [
   {
-    "ts": "2026-08-14T13:44:39Z",
-    "epoch": 1786715079,
-    "actor": "cron",
-    "action": "refresh",
-    "details": "Hourly refresh: 6/6 prices fetched, 0 rule(s) triggered. P&L: $2.54 (+49.76%)",
-    "data": {
-      "fetched": 6,
-      "total": 6,
-      "rules_triggered": 0,
-      "portfolio_value": 7.637626539439733,
-      "pnl_pct": 49.75738312626928
-    }
-  },
-  {
-    "ts": "2026-08-14T14:40:06Z",
-    "epoch": 1786718406,
-    "actor": "cron",
-    "action": "refresh",
-    "details": "Hourly refresh: 6/6 prices fetched, 0 rule(s) triggered. P&L: $2.50 (+49.03%)",
-    "data": {
-      "fetched": 6,
-      "total": 6,
-      "rules_triggered": 0,
-      "portfolio_value": 7.6007372412820615,
-      "pnl_pct": 49.03406355455024
-    }
-  },
-  {
-    "ts": "2026-08-14T15:33:53Z",
-    "epoch": 1786721633,
-    "actor": "cron",
-    "action": "refresh",
-    "details": "Hourly refresh: 6/6 prices fetched, 0 rule(s) triggered. P&L: $2.53 (+49.62%)",
-    "data": {
-      "fetched": 6,
-      "total": 6,
-      "rules_triggered": 0,
-      "portfolio_value": 7.6304886396304035,
-      "pnl_pct": 49.61742430647851
-    }
-  },
-  {
     "ts": "2026-08-14T16:26:46Z",
     "epoch": 1786724806,
     "actor": "cron",
@@ -14037,6 +13995,50 @@
       "rules_triggered": 0,
       "portfolio_value": 11.21898903556575,
       "pnl_pct": 460.9494517782875
+    }
+  },
+  {
+    "ts": "2026-11-24T07:06:26Z",
+    "epoch": 1795503986,
+    "actor": "zAI",
+    "action": "rule_triggered",
+    "details": "Rule 'tp-zai-basket-2x' triggered: take_profit on LISTA at +108.66% P&L \u2192 sell_50pct",
+    "data": {
+      "rule_id": "tp-zai-basket-2x",
+      "rule_type": "take_profit",
+      "token_id": "lista",
+      "ticker": "LISTA",
+      "pnl_pct_at_trigger": 108.6641593421,
+      "threshold": 100,
+      "action": "sell_50pct",
+      "trade_id": "fb91a48f-4e1f-4dc0-af75-0572db90354b",
+      "amount_sold": 10.552664125,
+      "price_usd": 0.098868
+    }
+  },
+  {
+    "ts": "2026-11-24T07:06:26Z",
+    "epoch": 1795503986,
+    "actor": "system",
+    "action": "rule_error",
+    "details": "Failed to execute rule 'tp-gai-basket-2x' on LISTA: Insufficient balance: have 10.55266412, want to sell 10.552664125",
+    "data": {
+      "rule_id": "tp-gai-basket-2x",
+      "error": "Insufficient balance: have 10.55266412, want to sell 10.552664125"
+    }
+  },
+  {
+    "ts": "2026-11-24T07:06:26Z",
+    "epoch": 1795503986,
+    "actor": "cron",
+    "action": "refresh",
+    "details": "Hourly refresh: 6/6 prices fetched, 1 rule(s) triggered. P&L: $9.82 (+654.34%)",
+    "data": {
+      "fetched": 6,
+      "total": 6,
+      "rules_triggered": 1,
+      "portfolio_value": 11.31514171121616,
+      "pnl_pct": 654.342780747744
     }
   }
 ]
